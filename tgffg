@@ -1,0 +1,2804 @@
+local players = game:GetService("Players")
+local playerLocal = game.Players.LocalPlayer
+local playergui = playerLocal:WaitForChild("PlayerGui")
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+if not playergui:FindFirstChild("griddleMenu") then
+	local griddleMenu = Instance.new("ScreenGui")
+	griddleMenu.Parent = playergui
+	griddleMenu.Name = "griddleMenu"
+	griddleMenu.ResetOnSpawn = false
+	griddleMenu.IgnoreGuiInset = true
+
+	function commonUiStroke(parent)
+		local uiStroke = Instance.new("UIStroke")
+		uiStroke.Parent = parent
+		uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		uiStroke.Color = Color3.fromRGB(255, 255, 255)
+		uiStroke.Thickness = 2.5
+		uiStroke.Transparency = 0.25
+	end
+
+	function commonGradient(parent)
+		local newGradient = Instance.new("UIGradient")
+		newGradient.Parent = parent
+		newGradient.Rotation = 90
+		newGradient.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(125, 125, 125))
+		}
+		newGradient.Transparency = NumberSequence.new{
+			NumberSequenceKeypoint.new(0, 0, 0),
+			NumberSequenceKeypoint.new(1, 0.2, 0)
+		}
+	end
+
+	function commonUiStrokeGradient(parent)
+		local newGradient = Instance.new("UIGradient")
+		newGradient.Parent = parent
+		newGradient.Rotation = 45
+		newGradient.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 0)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+		}
+		newGradient.Transparency = NumberSequence.new{
+			NumberSequenceKeypoint.new(0, 0, 0),
+			NumberSequenceKeypoint.new(0.5, 1, 0),
+			NumberSequenceKeypoint.new(1, 0, 0)
+		}
+	end
+	
+	function createGradient(parent, rotation, color1, color2, time1, time2)
+		local newGradient = Instance.new("UIGradient")
+		newGradient.Parent = parent
+		newGradient.Rotation = rotation
+		newGradient.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, color1),
+			ColorSequenceKeypoint.new(1, color2)
+		}
+		newGradient.Transparency = NumberSequence.new{
+			NumberSequenceKeypoint.new(0, time1, 0),
+			NumberSequenceKeypoint.new(1, time2, 0)
+		}
+	end
+
+	function commonUiCorner(parent)
+		local corner = Instance.new("UICorner")
+		corner.Parent = parent
+		corner.CornerRadius = UDim.new(0, 15)
+	end
+
+	function circleUiCorner(parent)
+		local corner = Instance.new("UICorner")
+		corner.Parent = parent
+		corner.CornerRadius = UDim.new(0, 25)
+	end
+
+	function makeDraggable(parent)
+		local dragBar = Instance.new("UIDragDetector")
+		dragBar.Parent = parent
+	end
+
+	function dragBarFunc(name, parent, position, initialVisibility)
+		local newFrame = Instance.new("Frame")
+		newFrame.Name = name
+		newFrame.Parent = parent
+		newFrame.Position = position
+		newFrame.Visible = initialVisibility
+		newFrame.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+		newFrame.BackgroundTransparency = 0.5
+		newFrame.Size = UDim2.new(0, 200, 0, 15)
+		newFrame.Active = true
+		makeDraggable(newFrame)
+		commonUiStroke(newFrame)
+		circleUiCorner(newFrame)
+	end
+	
+	function titleFunc(name, parent, text, position, size)
+		local newText = Instance.new("TextLabel")
+		newText.Name = name
+		newText.Parent = parent
+		newText.Text = text
+		newText.Position = position
+		newText.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		newText.BackgroundTransparency = 0.2
+		newText.Size = size
+		newText.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+		newText.TextColor3 = Color3.fromRGB(255, 255, 255)
+		newText.TextSize = 20
+		commonUiStroke(newText)
+		commonUiCorner(newText)
+	end
+	
+	function mainHubButtonsFunc(name, parent, text)
+		local newButton = Instance.new("TextButton")
+		newButton.Name = name
+		newButton.Parent = parent
+		newButton.Text = text
+		newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		newButton.BackgroundTransparency = 1
+		newButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+		newButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		newButton.TextSize = 14
+		commonUiCorner(newButton)
+		commonUiStroke(newButton)
+	end
+	
+	function sliderBaseFunc(name1, name2, name3, parent, text, position)
+		local textbox = Instance.new("TextLabel")
+		textbox.Parent = parent
+		textbox.Name = name1
+		textbox.Text = text
+		textbox.Position = position
+		textbox.BackgroundTransparency = 1
+		textbox.Size = UDim2.new(0, 200, 0, 50)
+		textbox.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+		textbox.TextColor3 = Color3.new(255, 255, 255)
+		textbox.TextSize = 14
+		textbox.TextWrapped = true
+		
+		local sliderSlotBg = Instance.new("Frame")
+		sliderSlotBg.Parent = textbox
+		sliderSlotBg.Name = name2
+		sliderSlotBg.BackgroundTransparency = 1
+		sliderSlotBg.Position = UDim2.new(0.002, 0, 0.833, 0)
+		sliderSlotBg.Size = UDim2.new(0, 203, 0, 35)
+		commonUiStroke(sliderSlotBg)
+		circleUiCorner(sliderSlotBg)
+		
+		local slot = Instance.new("Frame")
+		slot.Parent = sliderSlotBg
+		slot.Name = name3
+		slot.BackgroundTransparency = 0
+		slot.BackgroundColor3 = Color3.fromRGB(95, 95, 95)
+		slot.Position = UDim2.new(0.059, 0, 0.163, 0)
+		slot.Size = UDim2.new(0, 179, 0, 23)
+		commonUiStroke(slot)
+		circleUiCorner(slot)
+		
+		local slotGradient = Instance.new("UIGradient")
+		slotGradient.Parent = slot
+		slotGradient.Rotation = 0
+		slotGradient.Color = ColorSequence.new{
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 100, 100)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+		}
+		
+		local slider = Instance.new("Frame")
+		slider.Parent = slot
+		slider.Name = "slider"
+		slider.BackgroundTransparency = 0
+		slider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		slider.AnchorPoint = Vector2.new(0.5, 0.5)
+		slider.Position = UDim2.new(0.492, 0, 0.478, 0)
+		slider.Size = UDim2.new(0, 35, 0, 35)
+		local UiDrag = Instance.new("UIDragDetector")
+		UiDrag.Parent = slider
+		commonUiStroke(slider)
+		circleUiCorner(slider)
+		
+		local sliderGradient = Instance.new("Frame")
+		sliderGradient.Parent = slider
+		sliderGradient.Name = "sliderGradient"
+		sliderGradient.BackgroundTransparency = 0
+		sliderGradient.Position = UDim2.new(0, 0, 0, 0)
+		sliderGradient.Size = UDim2.new(0, 35, 0, 35)
+		commonUiStroke(sliderGradient)
+		circleUiCorner(sliderGradient)
+		createGradient(sliderGradient, 90, Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0), 1, 0)
+	end
+	
+	function bgBaseFunc(name, parent, position)
+		local newFrame = Instance.new("Frame")
+		newFrame.Name = name
+		newFrame.Parent = parent
+		newFrame.Position = position
+		newFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		newFrame.Size = UDim2.new(0, 300, 0, 213)
+		commonUiStroke(newFrame)
+		commonUiCorner(newFrame)
+		commonGradient(newFrame)
+	end
+
+	dragBarFunc("mainHub", griddleMenu, UDim2.new(0.297, 0, 0.624, 0), true)
+
+	local mainHubBg = Instance.new("Frame")
+	mainHubBg.Parent = griddleMenu:FindFirstChild("mainHub")
+	mainHubBg.Name = "mainHubBg"
+	mainHubBg.Visible = true
+	mainHubBg.Position = UDim2.new(-0.508, 0, -18.15, 0)
+	mainHubBg.Size = UDim2.new(0, 400, 0, 250)
+	mainHubBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	commonGradient(mainHubBg)
+	commonUiCorner(mainHubBg)
+	commonUiStroke(mainHubBg)
+	commonUiStrokeGradient(griddleMenu:FindFirstChild("mainHub"):FindFirstChild("mainHubBg"):FindFirstChild("UIStroke"))
+	
+	titleFunc("mainHubTitle", griddleMenu:FindFirstChild("mainHub"):FindFirstChild("mainHubBg"), "Griddle Menu Anomic", UDim2.new(0.195, 0, -0.264, 0), UDim2.new(0, 245, 0, 50))
+	
+	local mainHubGridLayout = Instance.new("Frame")
+	mainHubGridLayout.Parent = griddleMenu:FindFirstChild("mainHub")
+	mainHubGridLayout.Name = "gridLayout"
+	mainHubGridLayout.Position = UDim2.new(-0.387, 0, -16.571, 0)
+	mainHubGridLayout.Size = UDim2.new(0, 352, 0, 204)
+	mainHubGridLayout.BackgroundTransparency = 1
+	
+	local mainHubUiGridLayout = Instance.new("UIGridLayout")
+	mainHubUiGridLayout.Parent = griddleMenu:FindFirstChild("mainHub"):FindFirstChild("gridLayout")
+	mainHubUiGridLayout.CellPadding = UDim2.new(0, 52, 0, 26)
+	mainHubUiGridLayout.CellSize = UDim2.new(0, 150, 0, 50)
+	
+	mainHubButtonsFunc("platformSpawnsButton", griddleMenu:FindFirstChild("mainHub"):FindFirstChild("gridLayout"), "Platform Spawns")
+	mainHubButtonsFunc("espSpawnButton", griddleMenu:FindFirstChild("mainHub"):FindFirstChild("gridLayout"), "ESP")
+	mainHubButtonsFunc("freecamSpawnButton", griddleMenu:FindFirstChild("mainHub"):FindFirstChild("gridLayout"), "Freecam")
+	mainHubButtonsFunc("teleportsSpawnButton", griddleMenu:FindFirstChild("mainHub"):FindFirstChild("gridLayout"), "Teleports")
+	
+	dragBarFunc("espMain", griddleMenu, UDim2.new(0.642, 0, 0.489, 0), false)
+	
+	bgBaseFunc("espBg", griddleMenu:FindFirstChild("espMain"), UDim2.new(-0.25, 0, -15.268, 0))
+	commonUiStrokeGradient(griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("UIStroke"))
+	
+	titleFunc("espTitle", griddleMenu:FindFirstChild("espMain"), "ESP Controls", UDim2.new(-0.008, 0, -19.198, 0), UDim2.new(0, 200, 0, 45))
+	
+	local espBgAdvSettings = Instance.new("Frame")
+	espBgAdvSettings.Parent = griddleMenu:FindFirstChild("espMain")
+	espBgAdvSettings.Name = "espBgAdvSettings"
+	espBgAdvSettings.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	espBgAdvSettings.Position = UDim2.new(1.355, 0, -15.268, 0)
+	espBgAdvSettings.Size = UDim2.new(0, 300, 0 ,175)
+	espBgAdvSettings.Visible = false
+	commonUiStroke(espBgAdvSettings)
+	commonUiCorner(espBgAdvSettings)
+	commonGradient(espBgAdvSettings)
+	
+	local espBgPlayerList = Instance.new("Frame")
+	espBgPlayerList.Parent = griddleMenu:FindFirstChild("espMain")
+	espBgPlayerList.Name = "espBgPlayerList"
+	espBgPlayerList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	espBgPlayerList.Position = UDim2.new(-1.855, 0, -15.268, 0)
+	espBgPlayerList.Size = UDim2.new(0, 300, 0, 175)
+	espBgPlayerList.Visible = false
+	commonUiStroke(espBgPlayerList)
+	commonUiCorner(espBgPlayerList)
+	commonGradient(espBgPlayerList)
+	
+	local targetBoxBg = Instance.new("Frame")
+	targetBoxBg.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	targetBoxBg.Name = "targetBoxBg"
+	targetBoxBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	targetBoxBg.BackgroundTransparency = 1
+	targetBoxBg.Position = UDim2.new(0.167, 0, 0.114, 0)
+	targetBoxBg.Size = UDim2.new(0, 200, 0, 50)
+	commonUiStroke(targetBoxBg)
+	commonUiCorner(targetBoxBg)
+	
+	local targetBox = Instance.new("TextBox")
+	targetBox.Parent = targetBoxBg
+	targetBox.Name = "targetBox"
+	targetBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	targetBox.BackgroundTransparency = 1
+	targetBox.Position = UDim2.new(0.102, 0, -0.001, 0)
+	targetBox.Size = UDim2.new(0, 160, 0, 50)
+	targetBox.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	targetBox.Text = "Type player to target with ESP..."
+	targetBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	targetBox.TextSize = 14
+	targetBox.TextWrapped = true
+	
+	local advSettingsButton = Instance.new("TextButton")
+	advSettingsButton.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	advSettingsButton.Name = "advSettingsButton"
+	advSettingsButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	advSettingsButton.BackgroundTransparency = 1
+	advSettingsButton.Position = UDim2.new(0.867, 0, 0.177, 0)
+	advSettingsButton.Size = UDim2.new(0, 30, 0, 30)
+	advSettingsButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	advSettingsButton.Text = "->"
+	advSettingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	advSettingsButton.TextSize = 14
+	circleUiCorner(advSettingsButton)
+	commonUiStroke(advSettingsButton)
+	
+	local plrListButton = Instance.new("TextButton")
+	plrListButton.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	plrListButton.Name = "plrListButton"
+	plrListButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	plrListButton.BackgroundTransparency = 1
+	plrListButton.Position = UDim2.new(0.03, 0, 0.177, 0)
+	plrListButton.Size = UDim2.new(0, 30, 0, 30)
+	plrListButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	plrListButton.Text = "<-"
+	plrListButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	plrListButton.TextSize = 14
+	circleUiCorner(plrListButton)
+	commonUiStroke(plrListButton)
+	
+	local redColorBasic = Instance.new("Frame")
+	redColorBasic.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	redColorBasic.Name = "redColorBasic"
+	redColorBasic.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	redColorBasic.BackgroundTransparency = 0
+	redColorBasic.Position = UDim2.new(0.167, 0, 0.43, 0)
+	redColorBasic.Size = UDim2.new(0, 25, 0, 25)
+	createGradient(redColorBasic, 90, Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0), 0, 1)
+	commonUiStroke(redColorBasic)
+	commonUiCorner(redColorBasic)
+	
+	local redColorSelectionboxBasic = Instance.new("TextBox")
+	redColorSelectionboxBasic.Parent = redColorBasic
+	redColorSelectionboxBasic.Name = "redColorSelectionboxBasic"
+	redColorSelectionboxBasic.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	redColorSelectionboxBasic.BackgroundTransparency = 1
+	redColorSelectionboxBasic.Position = UDim2.new(2.03, 0, -0.017, 0)
+	redColorSelectionboxBasic.Size = UDim2.new(0, 25, 0, 25)
+	redColorSelectionboxBasic.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	redColorSelectionboxBasic.Text = 255
+	redColorSelectionboxBasic.TextColor3 = Color3.fromRGB(255, 255, 255)
+	redColorSelectionboxBasic.TextSize = 14
+	commonUiStroke(redColorSelectionboxBasic)
+	commonUiCorner(redColorSelectionboxBasic)
+	
+	local redColorEqualsSign = Instance.new("TextLabel")
+	redColorEqualsSign.Parent = redColorBasic
+	redColorEqualsSign.Name = "redColorEqualsSign"
+	redColorEqualsSign.BackgroundTransparency = 1
+	redColorEqualsSign.Position = UDim2.new(1, 0, 0, 0)
+	redColorEqualsSign.Size = UDim2.new(0, 25, 0, 25)
+	redColorEqualsSign.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	redColorEqualsSign.Text = "="
+	redColorEqualsSign.TextColor3 = Color3.fromRGB(255, 255, 255)
+	redColorEqualsSign.TextSize = 14
+	
+	local redColorTextBasic = Instance.new("TextLabel")
+	redColorTextBasic.Parent = redColorBasic
+	redColorTextBasic.Name = "redColorTextBasic"
+	redColorTextBasic.BackgroundTransparency = 1
+	redColorTextBasic.Position = UDim2.new(-0.033, 0, -0.023, 0)
+	redColorTextBasic.Size = UDim2.new(0, 25, 0, 25)
+	redColorTextBasic.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	redColorTextBasic.Text = "Red"
+	redColorTextBasic.TextColor3 = Color3.new(255, 255, 255)
+	redColorTextBasic.TextSize = 14
+	
+	local greenColorBasic = Instance.new("Frame")
+	greenColorBasic.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	greenColorBasic.Name = "greenColorBasic"
+	greenColorBasic.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	greenColorBasic.BackgroundTransparency = 0
+	greenColorBasic.Position = UDim2.new(0.167, 0, 0.62, 0)
+	greenColorBasic.Size = UDim2.new(0, 25, 0, 25)
+	createGradient(greenColorBasic, 90, Color3.fromRGB(0, 255, 0), Color3.new(0, 0, 0), 0, 1)
+	commonUiStroke(greenColorBasic)
+	circleUiCorner(greenColorBasic)
+	
+	local greenColorSelectionBoxBasic = Instance.new("TextBox")
+	greenColorSelectionBoxBasic.Parent = greenColorBasic
+	greenColorSelectionBoxBasic.Name = "greenColorSelectionboxBasic"
+	greenColorSelectionBoxBasic.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	greenColorSelectionBoxBasic.BackgroundTransparency = 1
+	greenColorSelectionBoxBasic.Position = UDim2.new(2.03, 0, -0.017, 0)
+	greenColorSelectionBoxBasic.Size = UDim2.new(0, 25, 0, 25)
+	greenColorSelectionBoxBasic.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	greenColorSelectionBoxBasic.Text = "255"
+	greenColorSelectionBoxBasic.TextSize = 14
+	greenColorSelectionBoxBasic.TextColor3 = Color3.fromRGB(255, 255, 255)
+	commonUiStroke(greenColorSelectionBoxBasic)
+	circleUiCorner(greenColorSelectionBoxBasic)
+	
+	local greenColorEqualsSign = Instance.new("TextLabel")
+	greenColorEqualsSign.Parent = greenColorBasic
+	greenColorEqualsSign.Name = "greenColorEqualsSign"
+	greenColorEqualsSign.BackgroundTransparency = 1
+	greenColorEqualsSign.Position = UDim2.new(1, 0, 0, 0)
+	greenColorEqualsSign.Size = UDim2.new(0, 25, 0, 25)
+	greenColorEqualsSign.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	greenColorEqualsSign.Text = "="
+	greenColorEqualsSign.TextSize = 14
+	greenColorEqualsSign.TextColor3 = Color3.fromRGB(255, 255, 255)
+	
+	local greenColorTextBasic = Instance.new("TextLabel")
+	greenColorTextBasic.Parent = greenColorBasic
+	greenColorTextBasic.Name = "greenColorTextBasic"
+	greenColorTextBasic.BackgroundTransparency = 1
+	greenColorTextBasic.Position = UDim2.new(-0.033, 0, -0.023, 0)
+	greenColorTextBasic.Size = UDim2.new(0, 25, 0, 25)
+	greenColorTextBasic.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	greenColorTextBasic.Text = "Green"
+	greenColorTextBasic.TextSize = 7
+	greenColorTextBasic.TextColor3 = Color3.fromRGB(255, 255, 255)
+	
+	local blueColorBasic = Instance.new("Frame")
+	blueColorBasic.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	blueColorBasic.Name = "blueColorBasic"
+	blueColorBasic.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	blueColorBasic.BackgroundTransparency = 0
+	blueColorBasic.Position = UDim2.new(0.167, 0, 0.81, 0)
+	blueColorBasic.Size = UDim2.new(0, 25, 0, 25)
+	createGradient(blueColorBasic, 90, Color3.fromRGB(0, 0, 255), Color3.fromRGB(0, 0, 0), 0, 1)
+	commonUiStroke(blueColorBasic)
+	circleUiCorner(blueColorBasic)
+	
+	local blueColorBasicSelectionBox = Instance.new("TextBox")
+	blueColorBasicSelectionBox.Parent = blueColorBasic
+	blueColorBasicSelectionBox.Name = "blueColorSelectionboxBasic"
+	blueColorBasicSelectionBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	blueColorBasicSelectionBox.BackgroundTransparency = 1
+	blueColorBasicSelectionBox.Position = UDim2.new(2.03, 0, -0.017, 0)
+	blueColorBasicSelectionBox.Size = UDim2.new(0, 25, 0, 25)
+	blueColorBasicSelectionBox.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	blueColorBasicSelectionBox.Text = "255"
+	blueColorBasicSelectionBox.TextSize = 14
+	blueColorBasicSelectionBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	commonUiStroke(blueColorBasicSelectionBox)
+	circleUiCorner(blueColorBasicSelectionBox)
+	
+	local blueColorEqualsSign = Instance.new("TextLabel")
+	blueColorEqualsSign.Parent = blueColorBasic
+	blueColorEqualsSign.Name = "blueColorEqualsSign"
+	blueColorEqualsSign.BackgroundTransparency = 1
+	blueColorEqualsSign.Position = UDim2.new(1, 0, 0, 0)
+	blueColorEqualsSign.Size = UDim2.new(0, 25, 0, 25)
+	blueColorEqualsSign.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	blueColorEqualsSign.Text = "="
+	blueColorEqualsSign.TextSize = 14
+	blueColorEqualsSign.TextColor3 = Color3.fromRGB(255, 255, 255)
+	
+	local blueColorTextBasic = Instance.new("TextLabel")
+	blueColorTextBasic.Parent = blueColorBasic
+	blueColorTextBasic.Name = "blueColorTextBasic"
+	blueColorTextBasic.BackgroundTransparency = 1
+	blueColorTextBasic.Position = UDim2.new(-0.033, 0, -0.023, 0)
+	blueColorTextBasic.Size = UDim2.new(0, 25, 0, 25)
+	blueColorTextBasic.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	blueColorTextBasic.Text = "Blue"
+	blueColorTextBasic.TextSize = 11
+	blueColorTextBasic.TextColor3 = Color3.fromRGB(255, 255, 255)
+	
+	local colorSelectorBasic = Instance.new("Frame")
+	colorSelectorBasic.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBg")
+	colorSelectorBasic.Name = "colorSelectorBasic"
+	colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	colorSelectorBasic.BackgroundTransparency = 0
+	colorSelectorBasic.Position = UDim2.new(0.48, 0, 0.427, 0)
+	colorSelectorBasic.Size = UDim2.new(0, 105, 0, 105)
+	commonUiStroke(colorSelectorBasic)
+	commonUiCorner(colorSelectorBasic)
+	
+	local colorSelectorBasicGradient = Instance.new("Frame")
+	colorSelectorBasicGradient.Parent = colorSelectorBasic
+	colorSelectorBasicGradient.Name = "colorSelectorBasicGradient"
+	colorSelectorBasicGradient.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	colorSelectorBasicGradient.BackgroundTransparency = 0.5
+	colorSelectorBasicGradient.Position = UDim2.new(0, 0, 0, 0)
+	colorSelectorBasicGradient.Size = UDim2.new(0, 105, 0, 105)
+	createGradient(colorSelectorBasicGradient, 90, Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0), 1, 0)
+	commonUiStroke(colorSelectorBasicGradient)
+	commonUiCorner(colorSelectorBasicGradient)
+	
+	local noPlrsText = Instance.new("TextLabel")
+	noPlrsText.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBgPlayerList")
+	noPlrsText.Name = "noPlrsText"
+	noPlrsText.BackgroundTransparency = 1
+	noPlrsText.Position = UDim2.new(0.167, 0, 0.354, 0)
+	noPlrsText.Size = UDim2.new(0, 200, 0, 50)
+	noPlrsText.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	noPlrsText.Text = "No players currently selected"
+	noPlrsText.TextSize = 14
+	noPlrsText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	noPlrsText.TextWrapped = true
+	
+	local playerNames = Instance.new("ScrollingFrame")
+	playerNames.Parent = griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBgPlayerList")
+	playerNames.Name = "playerNames"
+	playerNames.Active = true
+	playerNames.BackgroundTransparency = 1
+	playerNames.BorderSizePixel = 0
+	playerNames.Position = UDim2.new(0.074, 0, 0.137, 0)
+	playerNames.Size = UDim2.new(0, 270, 0, 127)
+	playerNames.CanvasSize = UDim2.new(0, 0, 3, 0)
+	
+	local playerNamesGridLayout = Instance.new("UIGridLayout")
+	playerNamesGridLayout.Parent = playerNames
+	playerNamesGridLayout.CellPadding = UDim2.new(0, 17, 0, 17)
+	playerNamesGridLayout.CellSize = UDim2.new(0, 115, 0, 35)
+	
+	sliderBaseFunc("nameHeightSlider", "nameHeightBg", "nameHeightSlot", griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings"), "Nametag Height", UDim2.new(0.163, 0, 0, 0))
+	
+	sliderBaseFunc("nameSizeSlider", "nameSizeBg", "nameSizeSlot", griddleMenu:FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings"), "Nametag Size", UDim2.new(0.17, 0, 0.44, 0))
+	
+	dragBarFunc("freecamMain", griddleMenu, UDim2.new(0.743, 0, 0.783, 0), false)
+	
+	bgBaseFunc("freecamBg", griddleMenu:FindFirstChild("freecamMain"), UDim2.new(-0.254, 0, -15.377, 0))
+	
+	titleFunc("freecamTitle", griddleMenu:FindFirstChild("freecamMain"), "Freecam", UDim2.new(0, 0, -19.4, 0), UDim2.new(0, 200, 0, 45))
+	
+	local freecamKeybindInput = Instance.new("TextBox")
+	freecamKeybindInput.Parent = griddleMenu:FindFirstChild("freecamMain"):FindFirstChild("freecamBg")
+	freecamKeybindInput.Name = "freecamKeybindInput"
+	freecamKeybindInput.BackgroundTransparency = 1
+	freecamKeybindInput.Position = UDim2.new(0.417, 0, 0.674, 0)
+	freecamKeybindInput.Size = UDim2.new(0, 50, 0, 50)
+	freecamKeybindInput.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	freecamKeybindInput.Text = "Input keybind"
+	freecamKeybindInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+	freecamKeybindInput.TextSize = 14
+	freecamKeybindInput.TextWrapped = true
+	commonUiStroke(freecamKeybindInput)
+	commonUiCorner(freecamKeybindInput)
+	
+	local freecamText = Instance.new("TextLabel")
+	freecamText.Parent = freecamKeybindInput
+	freecamText.Name = "freecamText"
+	freecamText.BackgroundTransparency = 1
+	freecamText.Position = UDim2.new(-1.673, 0, -1.002, 0)
+	freecamText.Size = UDim2.new(0, 217, 0, 50)
+	freecamText.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	freecamText.Text = "The keybind to toggle Freecam is left control and..."
+	freecamText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	freecamText.TextSize = 14
+	freecamText.TextWrapped = true
+	
+	local freecamEnableButton = Instance.new("TextButton")
+	freecamEnableButton.Parent = griddleMenu:FindFirstChild("freecamMain"):FindFirstChild("freecamBg")
+	freecamEnableButton.Name = "freecamEnableButton"
+	freecamEnableButton.BackgroundTransparency = 1
+	freecamEnableButton.Position = UDim2.new(0.167, 0, 0.144, 0)
+	freecamEnableButton.Size = UDim2.new(0, 200, 0, 52)
+	freecamEnableButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	freecamEnableButton.Text = "Disabled"
+	freecamEnableButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	freecamEnableButton.TextSize = 14
+	commonUiStroke(freecamEnableButton)
+	commonUiCorner(freecamEnableButton)
+	
+	local on1 = Instance.new("Frame")
+	on1.Parent = freecamEnableButton
+	on1.Name = "on1"
+	on1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	on1.BackgroundTransparency = 0
+	on1.Position = UDim2.new(0.06, 0, 0.173, 0)
+	on1.Size = UDim2.new(0.167, 0, 0.62, 0)
+	commonUiStroke(on1)
+	circleUiCorner(on1)
+	createGradient(on1, 90, Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0), 0, 1)
+	griddleMenu:FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton"):FindFirstChild("on1"):FindFirstChild("UIGradient").Name = "gradientRed"
+	
+	local on2 = Instance.new("Frame")
+	on2.Parent = freecamEnableButton
+	on2.Name = "on2"
+	on2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	on2.BackgroundTransparency = 0
+	on2.Position = UDim2.new(0.765, 0, 0.173, 0)
+	on2.Size = UDim2.new(0.167, 0, 0.62, 0)
+	commonUiStroke(on2)
+	circleUiCorner(on2)
+	createGradient(on2, 90, Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0), 0, 1)
+	griddleMenu:FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton"):FindFirstChild("on2"):FindFirstChild("UIGradient").Name = "gradientRed"
+	
+	dragBarFunc("platformSpawnsMain", griddleMenu, UDim2.new(0.559, 0, 0.387, 0), false)
+	
+	bgBaseFunc("platformSpawnsBg", griddleMenu:FindFirstChild("platformSpawnsMain"), UDim2.new(-0.25, 0, -15.268, 0))
+	
+	local pSpawnsGrid = Instance.new("Frame")
+	pSpawnsGrid.Parent = griddleMenu:FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg")
+	pSpawnsGrid.Name = "platformSpawnsGridLayout"
+	pSpawnsGrid.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	pSpawnsGrid.BackgroundTransparency = 1
+	pSpawnsGrid.Position = UDim2.new(0, 12, 0, 20)
+	pSpawnsGrid.Size = UDim2.new(0, 275, 0, 175)
+	
+	local pSpawnsGridLayout = Instance.new("UIGridLayout")
+	pSpawnsGridLayout.Parent = griddleMenu:FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout")
+	pSpawnsGridLayout.CellPadding = UDim2.new(0, 25, 0, 26)
+	pSpawnsGridLayout.CellSize = UDim2.new(0, 125, 0, 50)
+	
+	local bankPlatformSpawnButton = Instance.new("TextButton")
+	bankPlatformSpawnButton.Parent = griddleMenu:FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout")
+	bankPlatformSpawnButton.Name = "bankPlatformSpawnButton"
+	bankPlatformSpawnButton.BackgroundTransparency = 1
+	bankPlatformSpawnButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	bankPlatformSpawnButton.Text = "Bank Platform"
+	bankPlatformSpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	bankPlatformSpawnButton.TextSize = 14
+	commonUiStroke(bankPlatformSpawnButton)
+	commonUiCorner(bankPlatformSpawnButton)
+	
+	local treasuryPlatformSpawnButton = Instance.new("TextButton")
+	treasuryPlatformSpawnButton.Parent = griddleMenu:FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout")
+	treasuryPlatformSpawnButton.Name = "treasuryPlatformSpawnButton"
+	treasuryPlatformSpawnButton.BackgroundTransparency = 1
+	treasuryPlatformSpawnButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	treasuryPlatformSpawnButton.Text = "Treasury Platform"
+	treasuryPlatformSpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	treasuryPlatformSpawnButton.TextSize = 14
+	commonUiStroke(treasuryPlatformSpawnButton)
+	commonUiCorner(treasuryPlatformSpawnButton)
+else
+	print("Griddle Menu already injected")
+end
+
+uis.InputBegan:Connect(function(input, gameProcessed)
+	if input.KeyCode == Enum.KeyCode.RightShift then
+		local gui = playergui:FindFirstChild("griddleMenu")
+
+		if gui.Enabled == false then
+			gui.Enabled = true
+		else
+			gui.Enabled = false
+		end
+	end
+end)
+
+--[[
+	PLATFORM SPAWNS CODE
+--]]
+
+local bankPlatformSpawnButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout"):FindFirstChild("bankPlatformSpawnButton")
+local treasuryPlatformSpawnButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout"):FindFirstChild("treasuryPlatformSpawnButton")
+local bankPlatformSpawned = false
+local treasuryPlatformSpawned = false
+
+bankPlatformSpawnButton.Activated:Connect(function()
+	if bankPlatformSpawned == false then
+		bankPlatformSpawned = true
+		
+		local partbFolder = Instance.new("Folder")
+		partbFolder.Parent = game.Workspace
+		partbFolder.Name = "partbFolder"
+
+		local part1b = Instance.new("Part")
+		part1b.Name = "part1b"
+		part1b.Parent = partbFolder
+		part1b.Size = Vector3.new(35.3, 1, 14.3)
+		part1b.Position = Vector3.new(2044.51, -87.83, -1408.96)
+		part1b.Material = Enum.Material.SmoothPlastic
+		part1b.Color = Color3.fromRGB(163, 162, 165)
+		part1b.Anchored = true
+
+		local part2b = Instance.new("Part")
+		part2b.Name = "part2b"
+		part2b.Parent = partbFolder
+		part2b.Size = Vector3.new(6.3, 6.3, 1)
+		part2b.Position = Vector3.new(2030.01, -85.18, -1421.81)
+		part2b.Material = Enum.Material.SmoothPlastic
+		part2b.Color = Color3.fromRGB(163, 162, 165)
+		part2b.Anchored = true
+
+		local part3b = Instance.new("Part")
+		part3b.Name = "part3b"
+		part3b.Parent = partbFolder
+		part3b.Size = Vector3.new(6.3, 1, 5.5)
+		part3b.Position = Vector3.new(2030.01, -87.83, -1418.56)
+		part3b.Material = Enum.Material.SmoothPlastic
+		part3b.Color = Color3.fromRGB(163, 162, 165)
+		part3b.Anchored = true
+
+		local part4b = Instance.new("Part")
+		part4b.Name = "part4b"
+		part4b.Parent = partbFolder
+		part4b.Size = Vector3.new(1, 5.8, 6.5)
+		part4b.Position = Vector3.new(2033.66, -85.43, -1419.06)
+		part4b.Material = Enum.Material.SmoothPlastic
+		part4b.Color = Color3.fromRGB(163, 162, 165)
+		part4b.Anchored = true
+
+		local part5b = Instance.new("Part")
+		part5b.Name = "part5b"
+		part5b.Parent = partbFolder
+		part5b.Size = Vector3.new(35.5, 1, 11.25)
+		part5b.Position = Vector3.new(2079.91, -87.83, -1407.435)
+		part5b.Material = Enum.Material.SmoothPlastic
+		part5b.Color = Color3.fromRGB(163, 162, 165)
+		part5b.Anchored = true
+
+		local part6b = Instance.new("Part")
+		part6b.Name = "part6b"
+		part6b.Parent = partbFolder
+		part6b.Size = Vector3.new(14, 6, 1)
+		part6b.Position = Vector3.new(2041.16, -85.33, -1416.31)
+		part6b.Material = Enum.Material.SmoothPlastic
+		part6b.Color = Color3.fromRGB(163, 162, 165)
+		part6b.Anchored = true
+
+		local part7b = Instance.new("Part")
+		part7b.Name = "part7b"
+		part7b.Parent = partbFolder
+		part7b.Size = Vector3.new(1, 5, 1)
+		part7b.Position = Vector3.new(2048.66, -85.83, -1416.31)
+		part7b.Material = Enum.Material.SmoothPlastic
+		part7b.Color = Color3.fromRGB(163, 162, 165)
+		part7b.Anchored = true
+
+		local part8b = Instance.new("Part")
+		part8b.Name = "part8b"
+		part8b.Parent = partbFolder
+		part8b.Size = Vector3.new(1, 4, 1)
+		part8b.Position = Vector3.new(2049.66, -86.33, -1416.31)
+		part8b.Material = Enum.Material.SmoothPlastic
+		part8b.Color = Color3.fromRGB(163, 162, 165)
+		part8b.Anchored = true
+
+		local part9b = Instance.new("Part")
+		part9b.Name = "part9b"
+		part9b.Parent = partbFolder
+		part9b.Size = Vector3.new(1, 3, 1)
+		part9b.Position = Vector3.new(2050.66, -86.83, -1416.31)
+		part9b.Material = Enum.Material.SmoothPlastic
+		part9b.Color = Color3.fromRGB(163, 162, 165)
+		part9b.Anchored = true
+
+		local part10b = Instance.new("Part")
+		part10b.Name = "part10b"
+		part10b.Parent = partbFolder
+		part10b.Size = Vector3.new(1, 2.1, 1)
+		part10b.Position = Vector3.new(2051.66, -87.28, -1416.31)
+		part10b.Material = Enum.Material.SmoothPlastic
+		part10b.Color = Color3.fromRGB(163, 162, 165)
+		part10b.Anchored = true
+
+		local part11b = Instance.new("Part")
+		part11b.Name = "part11b"
+		part11b.Parent = partbFolder
+		part11b.Size = Vector3.new(10.5, 1, 37)
+		part11b.Position = Vector3.new(2092.41, -87.83, -1430.81)
+		part11b.Material = Enum.Material.SmoothPlastic
+		part11b.Color = Color3.fromRGB(163, 162, 165)
+		part11b.Anchored = true
+
+		local part12b = Instance.new("Part")
+		part12b.Name = "part12b"
+		part12b.Parent = partbFolder
+		part12b.Size = Vector3.new(26.6, 1, 10.5)
+		part12b.Position = Vector3.new(2073.86, -87.83, -1444.06)
+		part12b.Material = Enum.Material.SmoothPlastic
+		part12b.Color = Color3.fromRGB(163, 162, 165)
+		part12b.Anchored = true
+
+		local part13b = Instance.new("Part")
+		part13b.Name = "part13b"
+		part13b.Parent = partbFolder
+		part13b.Size = Vector3.new(1, 16.9, 66.4)
+		part13b.Position = Vector3.new(2027.36, -79.88, -1434.01)
+		part13b.Material = Enum.Material.SmoothPlastic
+		part13b.Color = Color3.fromRGB(163, 162, 165)
+		part13b.Anchored = true
+
+		local part14b = Instance.new("Part")
+		part14b.Name = "part14b"
+		part14b.Parent = partbFolder
+		part14b.Size = Vector3.new(70.8, 16.9, 1)
+		part14b.Position = Vector3.new(2063.26, -79.88, -1401.31)
+		part14b.Material = Enum.Material.SmoothPlastic
+		part14b.Color = Color3.fromRGB(163, 162, 165)
+		part14b.Anchored = true
+
+		local part15b = Instance.new("Part")
+		part15b.Name = "part15b"
+		part15b.Parent = partbFolder
+		part15b.Size = Vector3.new(0.9, 16.9, 48.5)
+		part15b.Position = Vector3.new(2098.21, -79.88, -1426.06)
+		part15b.Material = Enum.Material.SmoothPlastic
+		part15b.Color = Color3.fromRGB(163, 162, 165)
+		part15b.Anchored = true
+
+		local part16b = Instance.new("Part")
+		part16b.Name = "part16b"
+		part16b.Parent = partbFolder
+		part16b.Size = Vector3.new(1, 16.9, 48.5)
+		part16b.Position = Vector3.new(2098.16, -79.88, -1426.06)
+		part16b.Material = Enum.Material.SmoothPlastic
+		part16b.Color = Color3.fromRGB(163, 162, 165)
+		part16b.Anchored = true
+
+		local part17b = Instance.new("Part")
+		part17b.Name = "part17b"
+		part17b.Parent = partbFolder
+		part17b.Size = Vector3.new(26.7, 16.9, 1)
+		part17b.Position = Vector3.new(2084.31, -79.88, -1449.81)
+		part17b.Material = Enum.Material.SmoothPlastic
+		part17b.Color = Color3.fromRGB(163, 162, 165)
+		part17b.Anchored = true
+
+		local part18b = Instance.new("Part")
+		part18b.Name = "part18b"
+		part18b.Parent = partbFolder
+		part18b.Size = Vector3.new(1, 16.2, 1)
+		part18b.Position = Vector3.new(2070.459, -80.23, -1449.81)
+		part18b.Material = Enum.Material.SmoothPlastic
+		part18b.Color = Color3.fromRGB(163, 162, 165)
+		part18b.Anchored = true
+
+		local part19b = Instance.new("Part")
+		part19b.Name = "part19b"
+		part19b.Parent = partbFolder
+		part19b.Size = Vector3.new(1, 15.2, 1)
+		part19b.Position = Vector3.new(2069.459, -80.73, -1449.81)
+		part19b.Material = Enum.Material.SmoothPlastic
+		part19b.Color = Color3.fromRGB(163, 162, 165)
+		part19b.Anchored = true
+
+		local part20b = Instance.new("Part")
+		part20b.Name = "part20b"
+		part20b.Parent = partbFolder
+		part20b.Size = Vector3.new(1, 14.2, 1)
+		part20b.Position = Vector3.new(2068.459, -81.23, -1449.81)
+		part20b.Material = Enum.Material.SmoothPlastic
+		part20b.Color = Color3.fromRGB(163, 162, 165)
+		part20b.Anchored = true
+
+		local part21b = Instance.new("Part")
+		part21b.Name = "part21b"
+		part21b.Parent = partbFolder
+		part21b.Size = Vector3.new(1, 13.2, 1)
+		part21b.Position = Vector3.new(2067.459, -81.73, -1449.81)
+		part21b.Material = Enum.Material.SmoothPlastic
+		part21b.Color = Color3.fromRGB(163, 162, 165)
+		part21b.Anchored = true
+
+		local part22b = Instance.new("Part")
+		part22b.Name = "part22b"
+		part22b.Parent = partbFolder
+		part22b.Size = Vector3.new(1, 12.2, 1)
+		part22b.Position = Vector3.new(2066.459, -82.23, -1449.81)
+		part22b.Material = Enum.Material.SmoothPlastic
+		part22b.Color = Color3.fromRGB(163, 162, 165)
+		part22b.Anchored = true
+
+		local part23b = Instance.new("Part")
+		part23b.Name = "part23b"
+		part23b.Parent = partbFolder
+		part23b.Size = Vector3.new(1, 11.2, 1)
+		part23b.Position = Vector3.new(2065.459, -82.73, -1449.81)
+		part23b.Material = Enum.Material.SmoothPlastic
+		part23b.Color = Color3.fromRGB(163, 162, 165)
+		part23b.Anchored = true
+
+		local part24b = Instance.new("Part")
+		part24b.Name = "part24b"
+		part24b.Parent = partbFolder
+		part24b.Size = Vector3.new(1, 10.2, 1)
+		part24b.Position = Vector3.new(2064.459, -83.23, -1449.81)
+		part24b.Material = Enum.Material.SmoothPlastic
+		part24b.Color = Color3.fromRGB(163, 162, 165)
+		part24b.Anchored = true
+
+		local part25b = Instance.new("Part")
+		part25b.Name = "part25b"
+		part25b.Parent = partbFolder
+		part25b.Size = Vector3.new(1, 9.2, 1)
+		part25b.Position = Vector3.new(2063.459, -83.73, -1449.81)
+		part25b.Material = Enum.Material.SmoothPlastic
+		part25b.Color = Color3.fromRGB(163, 162, 165)
+		part25b.Anchored = true
+
+		local part26b = Instance.new("Part")
+		part26b.Name = "part26b"
+		part26b.Parent = partbFolder
+		part26b.Size = Vector3.new(3.3, 8.1, 1)
+		part26b.Position = Vector3.new(2061.31, -84.28, -1449.81)
+		part26b.Material = Enum.Material.SmoothPlastic
+		part26b.Color = Color3.fromRGB(163, 162, 165)
+		part26b.Anchored = true
+
+		local part27b = Instance.new("Part")
+		part27b.Name = "part27b"
+		part27b.Parent = partbFolder
+		part27b.Size = Vector3.new(0.9, 8.1, 10.5)
+		part27b.Position = Vector3.new(2060.11, -84.28, -1444.06)
+		part27b.Material = Enum.Material.SmoothPlastic
+		part27b.Color = Color3.fromRGB(163, 162, 165)
+		part27b.Anchored = true
+
+		local part28b = Instance.new("Part")
+		part28b.Name = "part28b"
+		part28b.Parent = partbFolder
+		part28b.Size = Vector3.new(2.6, 8.1, 1)
+		part28b.Position = Vector3.new(2061.86, -84.28, -1439.31)
+		part28b.Material = Enum.Material.SmoothPlastic
+		part28b.Color = Color3.fromRGB(163, 162, 165)
+		part28b.Anchored = true
+
+		local part29b = Instance.new("Part")
+		part29b.Name = "part29b"
+		part29b.Parent = partbFolder
+		part29b.Size = Vector3.new(31.5, 16.9, 1.1)
+		part29b.Position = Vector3.new(2042.61, -79.88, -1466.66)
+		part29b.Material = Enum.Material.SmoothPlastic
+		part29b.Color = Color3.fromRGB(163, 162, 165)
+		part29b.Anchored = true
+
+		local part30b = Instance.new("Part")
+		part30b.Name = "part30b"
+		part30b.Parent = partbFolder
+		part30b.Size = Vector3.new(1, 16.9, 8.6)
+		part30b.Position = Vector3.new(2057.86, -79.88, -1461.81)
+		part30b.Material = Enum.Material.SmoothPlastic
+		part30b.Color = Color3.fromRGB(163, 162, 165)
+		part30b.Anchored = true
+
+		local part31b = Instance.new("Part")
+		part31b.Name = "part31b"
+		part31b.Parent = partbFolder
+		part31b.Size = Vector3.new(5.5, 0.1, 2)
+		part31b.Position = Vector3.new(2030.51, -86.38, -1420.31)
+		part31b.Material = Enum.Material.SmoothPlastic
+		part31b.Color = Color3.fromRGB(163, 162, 165)
+		part31b.Anchored = true
+
+		local part32b = Instance.new("Part")
+		part32b.Name = "part32b"
+		part32b.Parent = partbFolder
+		part32b.Size = Vector3.new(5.5, 0.1, 2)
+		part32b.Position = Vector3.new(2030.51, -85.38, -1420.31)
+		part32b.Material = Enum.Material.SmoothPlastic
+		part32b.Color = Color3.fromRGB(163, 162, 165)
+		part32b.Anchored = true
+
+		local part33b = Instance.new("Part")
+		part33b.Name = "part33b"
+		part33b.Parent = partbFolder
+		part33b.Size = Vector3.new(5.5, 0.1, 2)
+		part33b.Position = Vector3.new(2030.51, -84.38, -1420.31)
+		part33b.Material = Enum.Material.SmoothPlastic
+		part33b.Color = Color3.fromRGB(163, 162, 165)
+		part33b.Anchored = true
+
+		local part34b = Instance.new("Part")
+		part34b.Name = "part34b"
+		part34b.Parent = partbFolder
+		part34b.Size = Vector3.new(5.5, 0.1, 2)
+		part34b.Position = Vector3.new(2030.51, -83.38, -1420.31)
+		part34b.Material = Enum.Material.SmoothPlastic
+		part34b.Color = Color3.fromRGB(163, 162, 165)
+		part34b.Anchored = true
+
+		local part35b = Instance.new("Part")
+		part35b.Name = "part35b"
+		part35b.Parent = partbFolder
+		part35b.Size = Vector3.new(5.5, 0.1, 2)
+		part35b.Position = Vector3.new(2030.51, -82.38, -1420.31)
+		part35b.Material = Enum.Material.SmoothPlastic
+		part35b.Color = Color3.fromRGB(163, 162, 165)
+		part35b.Anchored = true
+
+		local part36b = Instance.new("Part")
+		part36b.Name = "part36b"
+		part36b.Parent = partbFolder
+		part36b.Size = Vector3.new(5.5, 0.1, 2)
+		part36b.Position = Vector3.new(2030.51, -81.38, -1420.31)
+		part36b.Material = Enum.Material.SmoothPlastic
+		part36b.Color = Color3.fromRGB(163, 162, 165)
+		part36b.Anchored = true
+
+		local part37b = Instance.new("Part")
+		part37b.Name = "part37b"
+		part37b.Parent = partbFolder
+		part37b.Size = Vector3.new(5.5, 0.1, 2)
+		part37b.Position = Vector3.new(2030.51, -80.38, -1420.31)
+		part37b.Material = Enum.Material.SmoothPlastic
+		part37b.Color = Color3.fromRGB(163, 162, 165)
+		part37b.Anchored = true
+
+		local part38b = Instance.new("Part")
+		part38b.Name = "part38b"
+		part38b.Parent = partbFolder
+		part38b.Size = Vector3.new(5.5, 0.1, 2)
+		part38b.Position = Vector3.new(2030.51, -79.38, -1420.31)
+		part38b.Material = Enum.Material.SmoothPlastic
+		part38b.Color = Color3.fromRGB(163, 162, 165)
+		part38b.Anchored = true
+
+		local part39b = Instance.new("Part")
+		part39b.Name = "part39b"
+		part39b.Parent = partbFolder
+		part39b.Size = Vector3.new(5.5, 0.1, 2)
+		part39b.Position = Vector3.new(2030.51, -78.38, -1420.31)
+		part39b.Material = Enum.Material.SmoothPlastic
+		part39b.Color = Color3.fromRGB(163, 162, 165)
+		part39b.Anchored = true
+
+		local part40b = Instance.new("Part")
+		part40b.Name = "part40b"
+		part40b.Parent = partbFolder
+		part40b.Size = Vector3.new(5.5, 0.1, 2)
+		part40b.Position = Vector3.new(2030.51, -77.38, -1420.31)
+		part40b.Material = Enum.Material.SmoothPlastic
+		part40b.Color = Color3.fromRGB(163, 162, 165)
+		part40b.Anchored = true
+
+		local part41b = Instance.new("Part")
+		part41b.Name = "part41b"
+		part41b.Parent = partbFolder
+		part41b.Size = Vector3.new(5.5, 0.1, 2)
+		part41b.Position = Vector3.new(2030.51, -76.38, -1420.31)
+		part41b.Material = Enum.Material.SmoothPlastic
+		part41b.Color = Color3.fromRGB(163, 162, 165)
+		part41b.Anchored = true
+
+		local part42b = Instance.new("Part")
+		part42b.Name = "part42b"
+		part42b.Parent = partbFolder
+		part42b.Size = Vector3.new(14.4, 8.6, 1)
+		part42b.Position = Vector3.new(2055.11, -84.08, -1436.31)
+		part42b.Material = Enum.Material.SmoothPlastic
+		part42b.Color = Color3.fromRGB(163, 162, 165)
+		part42b.Anchored = true
+		
+		local part43b = Instance.new("Part")
+		part43b.Name = "part43b"
+		part43b.Parent = partbFolder
+		part43b.Size = Vector3.new(1.4, 7.6, 1)
+		part43b.Position = Vector3.new(2047.61, -84.58, -1436.31)
+		part43b.Material = Enum.Material.SmoothPlastic
+		part43b.Color = Color3.fromRGB(163, 162, 165)
+		part43b.Anchored = true
+		
+		local chainName = "Chain"
+		
+		local chainCFrame = CFrame.new(2030.53491, -71.2049942, -1432.81006, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+		
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == chainName then
+				if part.CFrame:FuzzyEq(chainCFrame) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local interiorWallName = "InteriorWall"
+		
+		local interiorWallCFrame1 = CFrame.new(2047.65991, -79.7049942, -1415.93506, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == interiorWallName then
+				if part.CFrame:FuzzyEq(interiorWallCFrame1) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local interiorWallCFrame2 = CFrame.new(2053.83496, -79.5799942, -1436.31006, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == interiorWallName then
+				if part.CFrame:FuzzyEq(interiorWallCFrame2) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local stoppingPartName = "StoppingPart"
+		
+		local stoppingPartCFrame1 = CFrame.new(2075.28491, -83.0799942, -1412.68506, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == stoppingPartName then
+				if part.CFrame:FuzzyEq(stoppingPartCFrame1) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local stoppingPartCFrame2 = CFrame.new(2086.60986, -83.0799942, -1425.56006, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == stoppingPartName then
+				if part.CFrame:FuzzyEq(stoppingPartCFrame2) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local stoppingPartCFrame3 = CFrame.new(2074.48486, -83.0799942, -1439.31006, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == stoppingPartName then
+				if part.CFrame:FuzzyEq(stoppingPartCFrame3) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local stoppingPartCFrame4 = CFrame.new(2074.60986, -83.0799942, -1418.31006, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == stoppingPartName then
+				if part.CFrame:FuzzyEq(stoppingPartCFrame4) then
+					part:Destroy()
+				end
+			end
+		end
+		
+		local stoppingPartCFrame5 = CFrame.new(2074.60986, -83.0799942, -1434.56006, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("BankBuilding"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == stoppingPartName then
+				if part.CFrame:FuzzyEq(stoppingPartCFrame5) then
+					part:Destroy()
+				end
+			end
+		end
+	end
+end)
+
+treasuryPlatformSpawnButton.Activated:Connect(function()
+	if treasuryPlatformSpawned == false then
+		treasuryPlatformSpawned = true
+		
+		local treasuryPlatParts = Instance.new("Folder")
+		treasuryPlatParts.Parent = game.Workspace
+		treasuryPlatParts.Name = "treasuryPlatformParts"
+
+		local part1t = Instance.new("Part")
+		part1t.Parent = treasuryPlatParts
+		part1t.Name = "part1t"
+		part1t.Anchored = true
+		part1t.Color = Color3.fromRGB(163, 162, 165)
+		part1t.Material = Enum.Material.SmoothPlastic
+		part1t.Size = Vector3.new(20, 1, 116)
+		part1t.Position = Vector3.new(2420.316, -43.88, -3316.072)
+		part1t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part2t = Instance.new("Part")
+		part2t.Parent = treasuryPlatParts
+		part2t.Name = "part2t"
+		part2t.Anchored = true
+		part2t.Color = Color3.fromRGB(163, 162, 165)
+		part2t.Material = Enum.Material.SmoothPlastic
+		part2t.Size = Vector3.new(70, 1, 20)
+		part2t.Position = Vector3.new(2384.333, -43.88, -3260.988)
+		part2t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part3t = Instance.new("Part")
+		part3t.Parent = treasuryPlatParts
+		part3t.Name = "part3t"
+		part3t.Anchored = true
+		part3t.Color = Color3.fromRGB(163, 162, 165)
+		part3t.Material = Enum.Material.SmoothPlastic
+		part3t.Size = Vector3.new(20, 1, 58)
+		part3t.Position = Vector3.new(2352.941, -43.88, -3295.055)
+		part3t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part4t = Instance.new("Part")
+		part4t.Parent = treasuryPlatParts
+		part4t.Name = "part4t"
+		part4t.Anchored = true
+		part4t.Color = Color3.fromRGB(163, 162, 165)
+		part4t.Material = Enum.Material.SmoothPlastic
+		part4t.Size = Vector3.new(1, 14, 116)
+		part4t.Position = Vector3.new(2429.672, -36.38, -3317.722)
+		part4t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part5t = Instance.new("Part")
+		part5t.Parent = treasuryPlatParts
+		part5t.Name = "part5t"
+		part5t.Anchored = true
+		part5t.Color = Color3.fromRGB(163, 162, 165)
+		part5t.Material = Enum.Material.SmoothPlastic
+		part5t.Size = Vector3.new(88, 14, 1)
+		part5t.Position = Vector3.new(2395.672, -36.38, -3253.369)
+		part5t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part6t = Instance.new("Part")
+		part6t.Parent = treasuryPlatParts
+		part6t.Name = "part6t"
+		part6t.Anchored = true
+		part6t.Color = Color3.fromRGB(163, 162, 165)
+		part6t.Material = Enum.Material.SmoothPlastic
+		part6t.Size = Vector3.new(16, 1, 24)
+		part6t.Position = Vector3.new(2347.792, -43.88, -3335.78)
+		part6t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part7t = Instance.new("Part")
+		part7t.Parent = treasuryPlatParts
+		part7t.Name = "part7t"
+		part7t.Anchored = true
+		part7t.Color = Color3.fromRGB(163, 162, 165)
+		part7t.Material = Enum.Material.SmoothPlastic
+		part7t.Size = Vector3.new(1, 14, 78)
+		part7t.Position = Vector3.new(2345.322, -36.38, -3283.557)
+		part7t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part8t = Instance.new("Part")
+		part8t.Parent = treasuryPlatParts
+		part8t.Name = "part8t"
+		part8t.Anchored = true
+		part8t.Color = Color3.fromRGB(163, 162, 165)
+		part8t.Material = Enum.Material.SmoothPlastic
+		part8t.Size = Vector3.new(19, 1, 77)
+		part8t.Position = Vector3.new(2355.083, -29.88, -3285.786)
+		part8t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part9t = Instance.new("Part")
+		part9t.Parent = treasuryPlatParts
+		part9t.Name = "part9t"
+		part9t.Anchored = true
+		part9t.Color = Color3.fromRGB(163, 162, 165)
+		part9t.Material = Enum.Material.SmoothPlastic
+		part9t.Size = Vector3.new(16, 1, 24)
+		part9t.Position = Vector3.new(2347.793, -29.88, -3335.78)
+		part9t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part10t = Instance.new("Part")
+		part10t.Parent = treasuryPlatParts
+		part10t.Name = "part10t"
+		part10t.Anchored = true
+		part10t.Color = Color3.fromRGB(163, 162, 165)
+		part10t.Material = Enum.Material.SmoothPlastic
+		part10t.Size = Vector3.new(69, 1, 19)
+		part10t.Position = Vector3.new(2403.45, -29.88, -3264.866)
+		part10t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part11t = Instance.new("Part")
+		part11t.Parent = treasuryPlatParts
+		part11t.Name = "part11t"
+		part11t.Anchored = true
+		part11t.Color = Color3.fromRGB(163, 162, 165)
+		part11t.Material = Enum.Material.SmoothPlastic
+		part11t.Size = Vector3.new(19, 1, 39)
+		part11t.Position = Vector3.new(2423.035, -29.88, -3297.766)
+		part11t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part12t = Instance.new("Part")
+		part12t.Parent = treasuryPlatParts
+		part12t.Name = "part12t"
+		part12t.Anchored = true
+		part12t.Color = Color3.fromRGB(163, 162, 165)
+		part12t.Material = Enum.Material.SmoothPlastic
+		part12t.Size = Vector3.new(20, 15, 1)
+		part12t.Position = Vector3.new(2409.348, -36.88, -3372.525)
+		part12t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part13t = Instance.new("Part")
+		part13t.Parent = treasuryPlatParts
+		part13t.Name = "part13t"
+		part13t.Anchored = true
+		part13t.Color = Color3.fromRGB(163, 162, 165)
+		part13t.Material = Enum.Material.SmoothPlastic
+		part13t.Size = Vector3.new(19, 1, 42.1)
+		part13t.Position = Vector3.new(2413.582, -29.88, -3351.39)
+		part13t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part14t = Instance.new("Part")
+		part14t.Parent = treasuryPlatParts
+		part14t.Name = "part14t"
+		part14t.Anchored = true
+		part14t.Color = Color3.fromRGB(163, 162, 165)
+		part14t.Material = Enum.Material.SmoothPlastic
+		part14t.Size = Vector3.new(13, 1, 14)
+		part14t.Position = Vector3.new(2415.48, -29.88, -3323.343)
+		part14t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part15t = Instance.new("Part")
+		part15t.Parent = treasuryPlatParts
+		part15t.Name = "part15t"
+		part15t.Anchored = true
+		part15t.Color = Color3.fromRGB(163, 162, 165)
+		part15t.Material = Enum.Material.SmoothPlastic
+		part15t.Size = Vector3.new(7, 1, 38.31)
+		part15t.Position = Vector3.new(2426.574, -40.78, -3316.669)
+		part15t.Orientation = Vector3.new(35, 10, 0)
+
+		local part16t = Instance.new("Part")
+		part16t.Parent = treasuryPlatParts
+		part16t.Name = "part16t"
+		part16t.Anchored = true
+		part16t.Color = Color3.fromRGB(163, 162, 165)
+		part16t.Material = Enum.Material.SmoothPlastic
+		part16t.Size = Vector3.new(34.65, 3, 74)
+		part16t.Position = Vector3.new(2439.61, -19.689, -3341.17)
+		part16t.Orientation = Vector3.new(0, 10, 40)
+
+		local part17t = Instance.new("Part")
+		part17t.Parent = treasuryPlatParts
+		part17t.Name = "part17t"
+		part17t.Anchored = true
+		part17t.Color = Color3.fromRGB(163, 162, 165)
+		part17t.Material = Enum.Material.SmoothPlastic
+		part17t.Size = Vector3.new(1, 22, 64)
+		part17t.Position = Vector3.new(2406.445, -18.38, -3340.028)
+		part17t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part18t = Instance.new("Part")
+		part18t.Parent = treasuryPlatParts
+		part18t.Name = "part18t"
+		part18t.Anchored = true
+		part18t.Color = Color3.fromRGB(163, 162, 165)
+		part18t.Material = Enum.Material.SmoothPlastic
+		part18t.Size = Vector3.new(5, 1, 14)
+		part18t.Position = Vector3.new(2406.963, -7.88, -3319.811)
+		part18t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part19t = Instance.new("Part")
+		part19t.Parent = treasuryPlatParts
+		part19t.Name = "part19t"
+		part19t.Anchored = true
+		part19t.Color = Color3.fromRGB(163, 162, 165)
+		part19t.Material = Enum.Material.SmoothPlastic
+		part19t.Size = Vector3.new(22, 17, 1)
+		part19t.Position = Vector3.new(2429.043, -20.88, -3375.998)
+		part19t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part20t = Instance.new("Part")
+		part20t.Parent = treasuryPlatParts
+		part20t.Name = "part20t"
+		part20t.Anchored = true
+		part20t.Color = Color3.fromRGB(163, 162, 165)
+		part20t.Material = Enum.Material.SmoothPlastic
+		part20t.Size = Vector3.new(19, 1, 149)
+		part20t.Position = Vector3.new(2396.818, -29.88, -3446.474)
+		part20t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part21t = Instance.new("Part")
+		part21t.Parent = treasuryPlatParts
+		part21t.Name = "part21t"
+		part21t.Anchored = true
+		part21t.Color = Color3.fromRGB(163, 162, 165)
+		part21t.Material = Enum.Material.SmoothPlastic
+		part21t.Size = Vector3.new(1, 14, 149)
+		part21t.Position = Vector3.new(2387.954, -22.38, -3444.911)
+		part21t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part22t = Instance.new("Part")
+		part22t.Parent = treasuryPlatParts
+		part22t.Name = "part22t"
+		part22t.Anchored = true
+		part22t.Color = Color3.fromRGB(163, 162, 165)
+		part22t.Material = Enum.Material.SmoothPlastic
+		part22t.Size = Vector3.new(1, 14, 149)
+		part22t.Position = Vector3.new(2405.681, -22.38, -3448.036)
+		part22t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part23t = Instance.new("Part")
+		part23t.Parent = treasuryPlatParts
+		part23t.Name = "part23t"
+		part23t.Anchored = true
+		part23t.Color = Color3.fromRGB(163, 162, 165)
+		part23t.Material = Enum.Material.SmoothPlastic
+		part23t.Size = Vector3.new(19, 22, 1)
+		part23t.Position = Vector3.new(2383.97, -18.38, -3519.35)
+		part23t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part24t = Instance.new("Part")
+		part24t.Parent = treasuryPlatParts
+		part24t.Name = "part24t"
+		part24t.Anchored = true
+		part24t.Color = Color3.fromRGB(163, 162, 165)
+		part24t.Material = Enum.Material.SmoothPlastic
+		part24t.Size = Vector3.new(1, 8, 9)
+		part24t.Position = Vector3.new(2375.801, -11.38, -3513.848)
+		part24t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part25t = Instance.new("Part")
+		part25t.Parent = treasuryPlatParts
+		part25t.Name = "part25t"
+		part25t.Anchored = true
+		part25t.Color = Color3.fromRGB(163, 162, 165)
+		part25t.Material = Enum.Material.SmoothPlastic
+		part25t.Size = Vector3.new(1, 8, 9)
+		part25t.Position = Vector3.new(2393.528, -11.38, -3516.973)
+		part25t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part26t = Instance.new("Part")
+		part26t.Parent = treasuryPlatParts
+		part26t.Name = "part26t"
+		part26t.Anchored = true
+		part26t.Color = Color3.fromRGB(163, 162, 165)
+		part26t.Material = Enum.Material.SmoothPlastic
+		part26t.Size = Vector3.new(17, 0.5, 1)
+		part26t.Position = Vector3.new(2384.144, -28.63, -3518.365)
+		part26t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part27t = Instance.new("Part")
+		part27t.Parent = treasuryPlatParts
+		part27t.Name = "part27t"
+		part27t.Anchored = true
+		part27t.Color = Color3.fromRGB(163, 162, 165)
+		part27t.Material = Enum.Material.SmoothPlastic
+		part27t.Size = Vector3.new(17, 0.5, 1)
+		part27t.Position = Vector3.new(2384.144, -26.63, -3518.365)
+		part27t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part28t = Instance.new("Part")
+		part28t.Parent = treasuryPlatParts
+		part28t.Name = "part28t"
+		part28t.Anchored = true
+		part28t.Color = Color3.fromRGB(163, 162, 165)
+		part28t.Material = Enum.Material.SmoothPlastic
+		part28t.Size = Vector3.new(17, 0.5, 1)
+		part28t.Position = Vector3.new(2384.144, -24.63, -3518.365)
+		part28t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part29t = Instance.new("Part")
+		part29t.Parent = treasuryPlatParts
+		part29t.Name = "part29t"
+		part29t.Anchored = true
+		part29t.Color = Color3.fromRGB(163, 162, 165)
+		part29t.Material = Enum.Material.SmoothPlastic
+		part29t.Size = Vector3.new(17, 0.5, 1)
+		part29t.Position = Vector3.new(2384.144, -22.63, -3518.365)
+		part29t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part30t = Instance.new("Part")
+		part30t.Parent = treasuryPlatParts
+		part30t.Name = "part30t"
+		part30t.Anchored = true
+		part30t.Color = Color3.fromRGB(163, 162, 165)
+		part30t.Material = Enum.Material.SmoothPlastic
+		part30t.Size = Vector3.new(17, 0.5, 1)
+		part30t.Position = Vector3.new(2384.144, -20.63, -3518.365)
+		part30t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part31t = Instance.new("Part")
+		part31t.Parent = treasuryPlatParts
+		part31t.Name = "part31t"
+		part31t.Anchored = true
+		part31t.Color = Color3.fromRGB(163, 162, 165)
+		part31t.Material = Enum.Material.SmoothPlastic
+		part31t.Size = Vector3.new(17, 0.5, 1)
+		part31t.Position = Vector3.new(2384.144, -18.63, -3518.365)
+		part31t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part32t = Instance.new("Part")
+		part32t.Parent = treasuryPlatParts
+		part32t.Name = "part32t"
+		part32t.Anchored = true
+		part32t.Color = Color3.fromRGB(163, 162, 165)
+		part32t.Material = Enum.Material.SmoothPlastic
+		part32t.Size = Vector3.new(17, 0.5, 1)
+		part32t.Position = Vector3.new(2384.144, -16.63, -3518.365)
+		part32t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part33t = Instance.new("Part")
+		part33t.Parent = treasuryPlatParts
+		part33t.Name = "part33t"
+		part33t.Anchored = true
+		part33t.Color = Color3.fromRGB(163, 162, 165)
+		part33t.Material = Enum.Material.SmoothPlastic
+		part33t.Size = Vector3.new(17, 0.5, 1)
+		part33t.Position = Vector3.new(2384.144, -14.63, -3518.365)
+		part33t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part34t = Instance.new("Part")
+		part34t.Parent = treasuryPlatParts
+		part34t.Name = "part34t"
+		part34t.Anchored = true
+		part34t.Color = Color3.fromRGB(163, 162, 165)
+		part34t.Material = Enum.Material.SmoothPlastic
+		part34t.Size = Vector3.new(17, 0.5, 1)
+		part34t.Position = Vector3.new(2384.144, -12.63, -3518.365)
+		part34t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part35t = Instance.new("Part")
+		part35t.Parent = treasuryPlatParts
+		part35t.Name = "part35t"
+		part35t.Anchored = true
+		part35t.Color = Color3.fromRGB(163, 162, 165)
+		part35t.Material = Enum.Material.SmoothPlastic
+		part35t.Size = Vector3.new(17, 0.5, 1)
+		part35t.Position = Vector3.new(2384.144, -10.63, -3518.365)
+		part35t.Orientation = Vector3.new(0, 9.998, 0)
+
+		local part36t = Instance.new("Part")
+		part36t.Parent = treasuryPlatParts
+		part36t.Name = "part36t"
+		part36t.Anchored = true
+		part36t.Color = Color3.fromRGB(163, 162, 165)
+		part36t.Material = Enum.Material.SmoothPlastic
+		part36t.Size = Vector3.new(17, 0.5, 1)
+		part36t.Position = Vector3.new(2384.144, -8.63, -3518.365)
+		part36t.Orientation = Vector3.new(0, 9.998, 0)
+		
+		local roadPart1 = Instance.new("Part")
+		roadPart1.Parent = game.Workspace:FindFirstChild("Roads"):FindFirstChild("ConcreteRoads"):FindFirstChild("Roads")
+		roadPart1.Name = "Road"
+		roadPart1.Anchored = true
+		roadPart1.Color = Color3.fromRGB(163, 162, 165)
+		roadPart1.Material = Enum.Material.Concrete
+		roadPart1.Size = Vector3.new(62.8, 1.319, 6.919)
+		roadPart1.Position = Vector3.new(2379.904, -7.667, -3549.815)
+		roadPart1.Orientation = Vector3.new(0, -80.001, 0)
+
+		local roadPart2 = Instance.new("Part")
+		roadPart2.Parent = game.Workspace:FindFirstChild("Roads"):FindFirstChild("ConcreteRoads"):FindFirstChild("Roads")
+		roadPart2.Name = "Road"
+		roadPart2.Anchored = true
+		roadPart2.Color = Color3.fromRGB(163, 162, 165)
+		roadPart2.Material = Enum.Material.Concrete
+		roadPart2.Size = Vector3.new(69.8, 1.319, 30.659)
+		roadPart2.Position = Vector3.new(2399.007, -7.667, -3549.629)
+		roadPart2.Orientation = Vector3.new(0, -80.001, 0)
+
+		local roadPart3 = Instance.new("Part")
+		roadPart3.Parent = game.Workspace:FindFirstChild("Roads"):FindFirstChild("ConcreteRoads"):FindFirstChild("Roads")
+		roadPart3.Name = "Road"
+		roadPart3.Anchored = true
+		roadPart3.Color = Color3.fromRGB(163, 162, 165)
+		roadPart3.Material = Enum.Material.Concrete
+		roadPart3.Size = Vector3.new(69.8, 1.319, 101.659)
+		roadPart3.Position = Vector3.new(2327.608, -7.667, -3537.041)
+		roadPart3.Orientation = Vector3.new(0, -80.001, 0)
+
+		local walkwayPart1 = Instance.new("Part")
+		walkwayPart1.Parent = game.Workspace:FindFirstChild("Roads"):FindFirstChild("Walkways")
+		walkwayPart1.Name = "Walkway"
+		walkwayPart1.Anchored = true
+		walkwayPart1.Color = Color3.fromRGB(205, 205, 205)
+		walkwayPart1.Material = Enum.Material.Concrete
+		walkwayPart1.Size = Vector3.new(38.323, 1.45, 7.111)
+		walkwayPart1.Position = Vector3.new(2407.709, -7.233, -3519.229)
+		walkwayPart1.Orientation = Vector3.new(0, 9.998, 0)
+
+		local walkwayPart2 = Instance.new("Part")
+		walkwayPart2.Parent = game.Workspace:FindFirstChild("Roads"):FindFirstChild("Walkways")
+		walkwayPart2.Name = "Walkway"
+		walkwayPart2.Anchored = true
+		walkwayPart2.Color = Color3.fromRGB(205, 205, 205)
+		walkwayPart2.Material = Enum.Material.Concrete
+		walkwayPart2.Size = Vector3.new(101.093, 1.45, 7.111)
+		walkwayPart2.Position = Vector3.new(2333.242, -7.233, -3506.101)
+		walkwayPart2.Orientation = Vector3.new(0, 9.998, 0)
+		
+		local walkwayName = "Walkway"
+
+		local walkway1CFrame = CFrame.new(2430.2251, -14.2330437, -3327.22314, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Roads"):FindFirstChild("Walkways"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == walkwayName then
+				if part.CFrame:FuzzyEq(walkway1CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local walkway2CFrame = CFrame.new(2355.02124, -14.2330437, -3509.93994, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Roads"):FindFirstChild("Walkways"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == walkwayName then
+				if part.CFrame:FuzzyEq(walkway2CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local roadName = "Road"
+
+		local roadCFrame = CFrame.new(2345.82666, -15.6673737, -3540.25317, 0.173624337, -0, -0.984811902, 0, 1, -0, 0.984811902, 0, 0.173624337)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Roads"):FindFirstChild("ConcreteRoads"):FindFirstChild("Roads"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == roadName then
+				if part.CFrame:FuzzyEq(roadCFrame) then
+					part:Destroy()
+				end
+			end
+		end
+	end
+	
+	local vaultResetCheckCFrame = CFrame.new(2416.80225, -36.5416412, -3300.0249, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+	local function vaultResetCheck(goalCFrame)
+		for _, object in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):GetDescendants()) do
+			if object:IsA("BasePart") then
+				if object.CFrame:FuzzyEq(goalCFrame) then
+					return object
+				end
+			end
+		end
+		return nil
+	end
+
+	if vaultResetCheck(vaultResetCheckCFrame) then
+		local partNames = "Part"
+
+		local wall1PrevRoomCFrame = CFrame.new(2409.03442, -36.7344742, -3347.41284, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryLevel2Room"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(wall1PrevRoomCFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local wall2PrevRoomCFrame = CFrame.new(2356.84277, -36.7344742, -3333.15308, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryLevel2Room"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(wall2PrevRoomCFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local wall1CFrame = CFrame.new(2416.80225, -36.5416412, -3300.0249, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(wall1CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local wall2CFrame = CFrame.new(2393.59912, -36.5416412, -3266.25366, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(wall2CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local wall3CFrame = CFrame.new(2357.81177, -36.5416412, -3289.71582, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(wall3CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local trim1CFrame = CFrame.new(2412.78101, -42.9569092, -3299.24146, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):FindFirstChild("Trim"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(trim1CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local trim2CFrame = CFrame.new(2392.59497, -42.9569092, -3272.97314, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):FindFirstChild("Trim"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(trim2CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+
+		local trim3CFrame = CFrame.new(2364.37573, -42.9569092, -3290.89233, 0.984812498, 0, 0.173621148, 0, 1, 0, -0.173621148, 0, 0.984812498)
+
+		for _, part in ipairs(game.Workspace:FindFirstChild("Buildings"):FindFirstChild("EastdikeTownHall"):FindFirstChild("TreasuryRobberyRooms"):FindFirstChild("TreasuryVault"):FindFirstChild("Vault"):FindFirstChild("Trim"):GetDescendants()) do
+			if part:IsA("BasePart") and part.Name == partNames then
+				if part.CFrame:FuzzyEq(trim3CFrame) then
+					part:Destroy()
+				end
+			end
+		end
+	else
+		print("GriddleMenu: Vault not yet resetted, cannot remove nonexistent vault walls")
+	end
+end)
+
+--[[
+	FREECAM CODE
+--]]
+
+local freecamButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton")
+local freecamEnabled = false
+
+freecamButton.Activated:Connect(function()
+	if freecamEnabled == false then
+		freecamEnabled = true
+	else
+		freecamEnabled = false
+	end
+end)
+
+local controlBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamKeybindInput")
+local savedCtrlBoxText = controlBox.Text
+local inputKeycode = Enum.KeyCode.M
+
+controlBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then
+		local rawInput = controlBox.Text:gsub("%s+", "")
+		rawInput = rawInput:sub(1,1):upper() .. rawInput:sub(2)
+
+		local validInputs = {}
+
+		for _, key in Enum.KeyCode:GetEnumItems() do
+			validInputs[key.Name] = key
+		end
+
+		local validInput = validInputs[rawInput]
+
+		if not validInput then
+			print("Griddle Menu (Freecam): '" .. controlBox.Text .. "'" .. " is not a valid input")
+		else
+			print("Griddle Menu (Freecam): Control button key set to " .. validInput.Name)
+			inputKeycode = validInput
+			controlBox.Text = validInput.Name
+			savedCtrlBoxText = validInput.Name
+		end
+	end
+	controlBox.Text = savedCtrlBoxText
+end)
+
+local cameraPart = nil
+local cameraLoop = nil
+local yaw = 0
+local pitch = 0
+local sensitivity = 0.002
+local maxPitch = math.rad(80)
+local freecamActive = false
+local keysDown = {}
+
+
+uis.InputBegan:Connect(function(input, gameProcessed)
+	if input.UserInputType ~= Enum.UserInputType.Keyboard then
+		return
+	end
+
+	keysDown[input.KeyCode] = true
+
+	if freecamEnabled == true then
+		if keysDown[inputKeycode] and keysDown[Enum.KeyCode.RightBracket] then
+			local runService = game:GetService("RunService")
+			local players = game:GetService("Players")
+			local player = players.LocalPlayer
+			local playerLocation = player.Character.Head.Position
+			local playerModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule"))
+			local playerControls = playerModule:GetControls()
+			local camera = game.Workspace.CurrentCamera
+
+			if not game.Workspace:FindFirstChild("cameraPart") then
+				freecamActive = true
+				cameraPart = Instance.new("Part")
+				cameraPart.Name = "cameraPart"
+				cameraPart.Parent = game.Workspace
+				cameraPart.Position = playerLocation
+				cameraPart.Anchored = true
+				cameraPart.CanCollide = false
+				cameraPart.Transparency = 1
+				camera.CameraType = Enum.CameraType.Scriptable
+				uis.MouseBehavior = Enum.MouseBehavior.LockCenter
+				uis.MouseIconEnabled = false
+				playerControls:Disable()
+				print("Griddle Menu (Freecam): Freecam active")
+
+				local _, y, _ = player.Character.Head.CFrame:ToEulerAnglesYXZ()
+				yaw = y
+				pitch = 0
+
+				cameraLoop = runService.RenderStepped:Connect(function(dt)
+					local delta = uis:GetMouseDelta()
+					local baseSpeed = 25
+					local speed = baseSpeed
+
+					yaw -= delta.X * sensitivity
+					pitch -= delta.Y * sensitivity
+
+					pitch = math.clamp(pitch, -maxPitch, maxPitch)
+
+					local rotation = CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0)
+
+					local move = Vector3.zero
+
+					if keysDown[Enum.KeyCode.LeftShift] then
+						speed = speed * 2
+					end
+
+					if keysDown[Enum.KeyCode.LeftControl] then
+						speed = speed * 0.5
+					end
+
+					if keysDown[Enum.KeyCode.W] then
+						move += Vector3.new(0, 0, -1)
+					end
+
+					if keysDown[Enum.KeyCode.S] then
+						move += Vector3.new(0, 0, 1)
+					end
+
+					if keysDown[Enum.KeyCode.A] then
+						move += Vector3.new(-1, 0, 0)
+					end
+
+					if keysDown[Enum.KeyCode.D] then
+						move += Vector3.new(1, 0, 0)
+					end
+
+					if move.Magnitude > 0 then
+						cameraPart.CFrame = cameraPart.CFrame * CFrame.new(move.Unit * speed * dt)
+					end
+
+					cameraPart.CFrame = CFrame.new(cameraPart.Position) * rotation
+					camera.CFrame = cameraPart.CFrame
+				end)
+
+			else
+				freecamActive = false
+				game.Workspace:FindFirstChild("cameraPart"):Destroy()
+				camera.CFrame = players.LocalPlayer.Character.Head.CFrame
+				cameraLoop:Disconnect()
+				cameraLoop = nil
+				camera.CameraType = Enum.CameraType.Custom
+				uis.MouseBehavior = Enum.MouseBehavior.Default
+				uis.MouseIconEnabled = true
+				playerControls:Enable()
+				print("Griddle Menu (Freecam): Freecam deactivated")
+			end
+		end
+	end
+end)
+
+uis.InputEnded:Connect(function(input)
+	if input.UserInputType ~= Enum.UserInputType.Keyboard then
+		return
+	end
+
+	keysDown[input.KeyCode] = nil
+end)
+
+--[[
+	ESP CODE
+--]]
+
+local targetBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("targetBoxBg"):FindFirstChild("targetBox")
+local targetedPlayers = {}
+local targetedParts = {}
+local redColorTextBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("redColorBasic"):FindFirstChild("redColorSelectionboxBasic")
+local greenColorTextBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("greenColorBasic"):FindFirstChild("greenColorSelectionboxBasic")
+local blueColorTextBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("blueColorBasic"):FindFirstChild("blueColorSelectionboxBasic")
+local colorSelectorBasic = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("colorSelectorBasic")
+local redColorValue = 255
+local greenColorValue = 255
+local blueColorValue = 255
+
+--//Slider for esp name part height
+local trackNameHeight = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings"):FindFirstChild("nameHeightSlider"):FindFirstChild("nameHeightBg"):FindFirstChild("nameHeightSlot")
+local sliderNameHeight = trackNameHeight:FindFirstChild("slider")
+local UiDragNameHeight = sliderNameHeight:FindFirstChild("UIDragDetector")
+
+local minValueEspNameHeight = 0
+local maxValueEspNameHeight = 3
+local midValueEspNameHeight = (minValueEspNameHeight + maxValueEspNameHeight) / 2
+
+local currentValueEspNameHeight = midValueEspNameHeight
+local espNamePartHeightVal = midValueEspNameHeight
+
+local function setSliderValueEspNameHeight(value)
+	value = math.clamp(value, minValueEspNameHeight, maxValueEspNameHeight)
+	local alpha = (value - minValueEspNameHeight) / (maxValueEspNameHeight - minValueEspNameHeight)
+	local trackWidth = trackNameHeight.AbsoluteSize.X
+	local buttonWidth = sliderNameHeight.AbsoluteSize.X
+
+	sliderNameHeight.Position = UDim2.new(0, alpha * (trackWidth - buttonWidth) + buttonWidth / 2, 0.5, 0)
+
+	currentValueEspNameHeight = value
+end
+
+local function screenXToValueEspNameHeight(screenX)
+	local trackLeft = trackNameHeight.AbsolutePosition.X
+	local trackWidth = trackNameHeight.AbsoluteSize.X
+	local buttonWidth = sliderNameHeight.AbsoluteSize.X
+
+	local localX = screenX - trackLeft
+	local minX = buttonWidth / 2
+	local maxX = trackWidth - buttonWidth / 2
+	localX = math.clamp(localX, minX, maxX)
+
+	local alpha = (localX - minX) / (maxX - minX)
+	local value = minValueEspNameHeight + (maxValueEspNameHeight - minValueEspNameHeight) * alpha
+
+	return value
+end
+
+local dragging = false
+
+sliderNameHeight.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+	end
+end)
+
+sliderNameHeight.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local value = screenXToValueEspNameHeight(input.Position.X)
+		setSliderValueEspNameHeight(value)
+		espNamePartHeightVal = value
+		
+		for player, data in pairs(targetedParts) do
+			local character = player.Character
+			local head = character and character:FindFirstChild("Head")
+
+			if head then
+				data.part.CFrame = head.CFrame * CFrame.new(0, value, 0)
+			end
+		end
+	end
+end)
+
+trackNameHeight.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local value = screenXToValueEspNameHeight(input.Position.X)
+		setSliderValueEspNameHeight(value)
+		espNamePartHeightVal = value
+
+		for player, data in pairs(targetedParts) do
+			local character = player.Character
+			local head = character and character:FindFirstChild("Head")
+
+			if head then
+				data.part.CFrame = head.CFrame * CFrame.new(0, value, 0)
+			end
+		end
+	end
+end)
+
+setSliderValueEspNameHeight(midValueEspNameHeight)
+
+--//Slider for esp name tag size
+local trackNameSize = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings"):FindFirstChild("nameSizeSlider"):FindFirstChild("nameSizeBg"):FindFirstChild("nameSizeSlot")
+local sliderNameSize = trackNameSize:FindFirstChild("slider")
+local UiDragNameSize = sliderNameSize:FindFirstChild("UIDragDetector")
+
+local minValueEspNameSize = -25
+local maxValueEspNameSize = 50
+local midValueEspNameSize = (minValueEspNameSize + maxValueEspNameSize) / 2
+
+local currentValueEspNameSize = midValueEspNameSize
+local espNameSizeValue = midValueEspNameSize
+
+local function setSliderValueEspNameSize(value)
+	value = math.clamp(value, minValueEspNameSize, maxValueEspNameSize)
+	local alpha = (value - minValueEspNameSize) / (maxValueEspNameSize - minValueEspNameSize)
+	local trackWidth = trackNameSize.AbsoluteSize.X
+	local buttonWidth = sliderNameSize.AbsoluteSize.X
+
+	sliderNameSize.Position = UDim2.new(0, alpha * (trackWidth - buttonWidth) + buttonWidth / 2, 0.5, 0)
+
+	currentValueEspNameSize = value
+end
+
+local function screenXToValueEspNameSize(screenX)
+	local trackLeft = trackNameSize.AbsolutePosition.X
+	local trackWidth = trackNameSize.AbsoluteSize.X
+	local buttonWidth = sliderNameSize.AbsoluteSize.X
+
+	local localX = screenX - trackLeft
+	local minX = buttonWidth / 2
+	local maxX = trackWidth - buttonWidth / 2
+	localX = math.clamp(localX, minX, maxX)
+
+	local alpha = (localX - minX) / (maxX - minX)
+	local value = minValueEspNameSize + (maxValueEspNameSize - minValueEspNameSize) * alpha
+
+	return value
+end
+
+local dragging = false
+
+sliderNameSize.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+	end
+end)
+
+sliderNameSize.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local value = screenXToValueEspNameSize(input.Position.X)
+		setSliderValueEspNameSize(value)
+		espNameSizeValue = value
+
+		for player, data in pairs(targetedParts) do
+			local character = player.Character
+			local head = character and character:FindFirstChild("Head")
+
+			if head then
+				local espName = data.part:FindFirstChild("espName")
+				local espNameText = espName:FindFirstChild("espNameText")
+				
+				espNameSizeValue = value
+				espName.Size = UDim2.new(0, 100 + value, 0 , 25 + (value / 4))
+				espNameText.Size = UDim2.new(0, 100 + value, 0 , 25 + (value / 4))
+			end
+		end
+	end
+end)
+
+trackNameSize.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local value = screenXToValueEspNameSize(input.Position.X)
+		setSliderValueEspNameSize(value)
+		espNameSizeValue = value
+
+		for player, data in pairs(targetedParts) do
+			local character = player.Character
+			local head = character and character:FindFirstChild("Head")
+
+			if head then
+				local espName = data.part:FindFirstChild("espName")
+				local espNameText = espName:FindFirstChild("espNameText")
+
+				espNameSizeValue = value
+				espName.Size = UDim2.new(0, 100 + value, 0 , 25 + (value / 4))
+				espNameText.Size = UDim2.new(0, 100 + value, 0 , 25 + (value / 4))
+			end
+		end
+	end
+end)
+
+setSliderValueEspNameSize(midValueEspNameSize)
+
+--//esp menu ui settings
+redColorTextBox.FocusLost:Connect(function(enterPressed)
+	local savedValue = redColorValue
+	
+	if enterPressed then
+		local redValue = redColorTextBox.Text
+		local rawVal = tonumber(redValue)
+		
+		if rawVal ~= nil and rawVal >= 0 and rawVal <= 255 then
+			local val = math.round(rawVal)
+			
+			print("Griddle Menu (ESP): Set red value of esp to " .. val)
+			redColorValue = val
+			colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			redColorTextBox.Text = val
+			savedValue = redColorValue
+			
+			for _, player in ipairs(players:GetPlayers()) do
+				if table.find(targetedPlayers, player.Name) then
+					local espHighlight = player.Character:FindFirstChild("espHighlight")
+					
+					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+
+					if #targetedPlayers > 1 then
+						local espNamePartFound = game.Workspace:FindFirstChild("highlightNameParts"):FindFirstChild(player.Name):FindFirstChild("espName"):FindFirstChild("espNameText")
+						
+						espNamePartFound.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+					end
+				end
+			end
+		else
+			print("Griddle Menu (ESP): Input invalid, input can only be numbers 0-255")
+			redColorTextBox.Text = savedValue
+		end
+	end
+	redColorTextBox.Text = savedValue
+end)
+
+greenColorTextBox.FocusLost:Connect(function(enterPressed)
+	local savedValue = greenColorValue
+
+	if enterPressed then
+		local greenValue = greenColorTextBox.Text
+		local rawVal = tonumber(greenValue)
+
+		if rawVal ~= nil and rawVal >= 0 and rawVal <= 255 then
+			local val = math.round(rawVal)
+
+			print("Griddle Menu (ESP): Set green value of esp to " .. val)
+			greenColorValue = val
+			colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			greenColorTextBox.Text = val
+			savedValue = greenColorValue
+
+			for _, player in ipairs(players:GetPlayers()) do
+				if table.find(targetedPlayers, player.Name) then
+					local espHighlight = player.Character:FindFirstChild("espHighlight")
+
+					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+
+					if #targetedPlayers > 1 then
+						local espNamePartFound = game.Workspace:FindFirstChild("highlightNameParts"):FindFirstChild(player.Name):FindFirstChild("espName"):FindFirstChild("espNameText")
+
+						espNamePartFound.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+					end
+				end
+			end
+		else
+			print("Griddle Menu (ESP): Input invalid, input can only be numbers 0-255")
+			greenColorTextBox.Text = savedValue
+		end
+	end
+	greenColorTextBox.Text = savedValue
+end)
+
+blueColorTextBox.FocusLost:Connect(function(enterPressed)
+	local savedValue = blueColorValue
+
+	if enterPressed then
+		local blueValue = blueColorTextBox.Text
+		local rawVal = tonumber(blueValue)
+
+		if rawVal ~= nil and rawVal >= 0 and rawVal <= 255 then
+			local val = math.round(rawVal)
+
+			print("Griddle Menu (ESP): Set blue value of esp to " .. val)
+			blueColorValue = val
+			colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			blueColorTextBox.Text = val
+			savedValue = blueColorValue
+
+			for _, player in ipairs(players:GetPlayers()) do
+				if table.find(targetedPlayers, player.Name) then
+					local espHighlight = player.Character:FindFirstChild("espHighlight")
+
+					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+
+					if #targetedPlayers > 1 then
+						local espNamePartFound = game.Workspace:FindFirstChild("highlightNameParts"):FindFirstChild(player.Name):FindFirstChild("espName"):FindFirstChild("espNameText")
+
+						espNamePartFound.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+					end
+				end
+			end
+		else
+			print("Griddle Menu (ESP): Input invalid, input can only be numbers 0-255")
+			blueColorTextBox.Text = savedValue
+		end
+	end
+	blueColorTextBox.Text = savedValue
+end)
+
+local function createHighlight(character)
+	local espHighlight = Instance.new("Highlight")
+	espHighlight.Name = "espHighlight"
+	espHighlight.Parent = character
+	espHighlight.FillTransparency = 0.7
+	espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+	espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+end
+
+local function createHighLightNamePart(targetedPlayer)
+	if targetedParts[targetedPlayer] then
+		return
+	end
+	
+	local character = targetedPlayer.Character
+	
+	if not character then
+		return
+	end
+
+	local part = Instance.new("Part")
+	part.Size = Vector3.new(1, 1, 1)
+	part.Anchored = true
+	part.CanCollide = false
+	part.Parent = game.Workspace:FindFirstChild("highlightNameParts")
+	part.Name = targetedPlayer.Name
+	part.Transparency = 1
+	
+	local espName = Instance.new("BillboardGui")
+	espName.Name = "espName"
+	espName.Parent = part
+	espName.ExtentsOffset = Vector3.new(0, 2.5, 0)
+	espName.AlwaysOnTop = true
+	espName.Size = UDim2.new(0, 100 + espNameSizeValue, 0 , 25 + (espNameSizeValue / 4))
+	espName.ClipsDescendants = false
+
+	local espNameText = Instance.new("TextLabel")
+	espNameText.Name = "espNameText"
+	espNameText.Parent = espName
+	espNameText.BackgroundTransparency = 1
+	espNameText.Size = UDim2.new(0, 100 + espNameSizeValue, 0 , 25 + (espNameSizeValue / 4))
+	espNameText.ClipsDescendants = false
+	espNameText.FontFace = Font.fromName("RobotoMono")
+	espNameText.Text = targetedPlayer.Name
+	espNameText.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+	espNameText.TextScaled = true
+
+	targetedParts[targetedPlayer] = {
+		part = part,
+		character = character
+	}
+end
+
+local function removeHighlightNamePart(targetedPlayer)
+	local data = targetedParts[targetedPlayer]
+	
+	if data and data.part then
+		data.part:Destroy()
+	end
+	
+	targetedParts[targetedPlayer] = nil
+end
+
+local function espNamePartsManager()
+	if #targetedPlayers >= 2 then
+		for _, player in ipairs(players:GetPlayers()) do
+			if table.find(targetedPlayers, player.Name) then
+				if not targetedParts[player] then
+					createHighLightNamePart(player)
+				end
+			end
+		end
+	else
+		for player, _ in pairs(targetedParts) do
+			removeHighlightNamePart(player)
+		end
+	end
+end
+
+--//Targetbox code
+targetBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then
+		local target = targetBox.Text
+		
+		local name = target
+		
+		local targetPlayer = players:FindFirstChild(target)
+		
+		local highlightNamePartsFound = game.Workspace:FindFirstChild("highlightNameParts")
+		
+		if not highlightNamePartsFound then
+			local highlightNameParts = Instance.new("Folder")
+			highlightNameParts.Parent = game.Workspace
+			highlightNameParts.Name = "highlightNameParts"
+		end
+		
+		local espBgPlayerList = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgPlayerList"):FindFirstChild("playerNames")
+		local plrNameInGui
+		local function createNameInGui()
+			plrNameInGui = Instance.new("TextLabel")
+			plrNameInGui.Name = targetPlayer.Name
+			plrNameInGui.Parent = espBgPlayerList
+			plrNameInGui.BackgroundTransparency = 1
+			plrNameInGui.FontFace = Font.fromName("RobotoMono")
+			plrNameInGui.Text = targetPlayer.Name
+			plrNameInGui.TextColor3 = Color3.fromRGB(255, 255, 255)
+			plrNameInGui.TextSize = 14
+			
+			local pnigFrame = Instance.new("Frame")
+			pnigFrame.Name = "playerNameFrame"
+			pnigFrame.Parent = plrNameInGui
+			pnigFrame.BackgroundTransparency = 1
+			pnigFrame.Size = UDim2.new(0,108,0,28)
+			pnigFrame.Position = UDim2.new(0.026, 0, 0.086, 0)
+			
+			local pnigFrameUiCorner = Instance.new("UICorner")
+			pnigFrameUiCorner.Parent = pnigFrame
+			pnigFrameUiCorner.CornerRadius = UDim.new(0, 8)
+			
+			local pnigFrameUiStroke = Instance.new("UIStroke")
+			pnigFrameUiStroke.Parent = pnigFrame
+			pnigFrameUiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			pnigFrameUiStroke.Color = Color3.fromRGB(255, 255, 255)
+			pnigFrameUiStroke.Thickness = 2.5
+			pnigFrameUiStroke.Transparency = 0.25
+		end
+		
+		local function espHandler()
+			local highlightCheck = targetPlayer.Character:FindFirstChild("espHighlight")
+			local highlightNameCheck = targetPlayer.Character:FindFirstChild("espNameText", true)
+			local highlightNamePartCheck = game.Workspace:FindFirstChild("highlightNameParts"):FindFirstChild(targetPlayer.Name)
+
+			local noPlrsText = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgPlayerList"):FindFirstChild("noPlrsText")
+
+			if highlightCheck then
+				local tPlayerInTable = table.find(targetedPlayers, targetPlayer.Name)
+
+				highlightCheck:Destroy()
+				espBgPlayerList:FindFirstChild(targetPlayer.Name):Destroy()
+
+				if highlightNamePartCheck then
+					highlightNamePartCheck:Destroy()
+				end
+
+				table.remove(targetedPlayers, tPlayerInTable)
+
+				if #targetedPlayers < 1 then
+					noPlrsText.Visible = true
+				end
+
+				espNamePartsManager()
+
+				print("Griddle Menu (ESP): ESP on " .. targetPlayer.Name .. " disabled")
+			else
+				createHighlight(targetPlayer.Character)
+				createNameInGui()
+
+				noPlrsText.Visible = false
+				table.insert(targetedPlayers, targetPlayer.Name)
+
+				espNamePartsManager()
+
+				print("Griddle Menu (ESP): ESP on " .. targetPlayer.Name .. " enabled")
+			end
+		end
+		
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("targetBoxBg"):FindFirstChild("targetBox").Text = "Type player to target with ESP..."
+		
+		if targetPlayer ~= nil then
+			espHandler()
+		else
+			local findMayorValue = game.ReplicatedStorage:FindFirstChild("CurrentMayor")
+			
+			local function mayorFindFunc()
+				if findMayorValue then
+					local mayorName = game:GetService("ReplicatedStorage").CurrentMayor.Value
+					
+					targetPlayer = mayorName
+					
+					if targetPlayer then
+						espHandler()
+					else
+						print("Griddle Menu (ESP): Error")
+					end
+				else
+					print("Griddle Menu (ESP): Command only functional in Anomic")
+				end
+			end
+			
+			if target == "#mayor" then
+				mayorFindFunc()
+			elseif target == "#Mayor" then	
+				mayorFindFunc()
+			else
+				print("Griddle Menu (ESP): No player with name " .. "'" .. name .. "'" .. " in server")
+			end
+		end
+	end
+	playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("targetBoxBg"):FindFirstChild("targetBox").Text = "Type player to target with ESP..."
+end)
+
+runService.RenderStepped:Connect(function()
+	local toRemove = {}
+	
+	for player, data in pairs(targetedParts) do
+		if not player.Parent then
+			table.insert(toRemove, player)
+			continue
+		end
+		
+		local character = player.Character
+		local head = character and character:FindFirstChild("Head")
+
+		if head then
+			data.part.CFrame = head.CFrame * CFrame.new(0, espNamePartHeightVal, 0)
+		else
+			table.insert(toRemove, player)
+		end
+	end
+	
+	for _, player in ipairs(toRemove) do
+		removeHighlightNamePart(player)
+	end
+end)
+
+--//Remove the esp name part and re-add it back after the player dies
+local function onPlayerRespawn(player, character)
+	removeHighlightNamePart(player)
+	
+	if table.find(targetedPlayers, player.Name) and #targetedPlayers >= 2 then
+		task.wait(0.01)
+		createHighLightNamePart(player)
+		createHighlight(player.Character)
+	end
+end
+
+for _, player in ipairs(players:GetPlayers()) do
+	player.CharacterAdded:Connect(function(character)
+		onPlayerRespawn(player, character)
+	end)
+end
+
+players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		onPlayerRespawn(player, character)
+	end)
+end)
+
+--//Remove player from list, remove player name from ESP gui, and remove the esp name part when the player leaves
+players.PlayerRemoving:Connect(function(player)
+	removeHighlightNamePart(player)
+	
+	local character = player.Character
+	
+	if character then
+		local highlight = character:FindFirstChild("espHighlight")
+		
+		if highlight then
+			highlight:Destroy()
+		end
+	end
+	
+	local index = table.find(targetedPlayers, player.Name)
+	
+	if index then
+		table.remove(targetedPlayers, index)
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgPlayerList"):FindFirstChild("playerNames"):FindFirstChild(player.Name):Destroy()
+	end
+	
+	espNamePartsManager()
+end)
+
+--[[
+	TWEENING AND BUTTON SCRIPTS
+--]]
+local tweenService = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+local baseTransparency = {BackgroundTransparency = 1}
+local targetTransparency = {BackgroundTransparency = 0.75}
+
+local espSpawnButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("mainHub"):FindFirstChild("gridLayout"):FindFirstChild("espSpawnButton")
+local tweenPlayEspSpawnButton = tweenService:Create(espSpawnButton, tweenInfo, targetTransparency)
+local tweenRevertEspSpawnButton = tweenService:Create(espSpawnButton, tweenInfo, baseTransparency)
+local espSpawnButtonSelected = false
+
+espSpawnButton.Activated:Connect(function()
+	if playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain").Visible == false then
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain").Visible = true
+		espSpawnButtonSelected = true
+	else
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain").Visible = false
+		espSpawnButtonSelected = false
+	end
+end)
+
+espSpawnButton.MouseEnter:Connect(function()
+	tweenPlayEspSpawnButton:Play()
+end)
+
+espSpawnButton.MouseLeave:Connect(function()
+	if espSpawnButtonSelected == false then
+		tweenRevertEspSpawnButton:Play()
+	end
+end)
+
+local advSettingsButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("advSettingsButton")
+local tweenPlayAdvSettingsButton = tweenService:Create(advSettingsButton, tweenInfo, targetTransparency)
+local tweenRevertAdvSettingsButton = tweenService:Create(advSettingsButton, tweenInfo, baseTransparency)
+local advSettingsButtonSelected = false
+
+advSettingsButton.Activated:Connect(function()
+	if playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings").Visible == false then
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings").Visible = true
+		advSettingsButtonSelected = true
+		advSettingsButton.Text = "<-"
+	else
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings").Visible = false
+		advSettingsButtonSelected = false
+		advSettingsButton.Text = "->"
+	end
+end)
+
+advSettingsButton.MouseEnter:Connect(function()
+	tweenPlayAdvSettingsButton:Play()
+end)
+
+advSettingsButton.MouseLeave:Connect(function()
+	if advSettingsButtonSelected == false then
+		tweenRevertAdvSettingsButton:Play()
+	end
+end)
+
+local plrListButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("plrListButton")
+local tweenPlayPlrListButton = tweenService:Create(plrListButton, tweenInfo, targetTransparency)
+local tweenRevertPlrListButton = tweenService:Create(plrListButton, tweenInfo, baseTransparency)
+local plrListButtonSelected = false
+
+plrListButton.Activated:Connect(function()
+	if playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgPlayerList").Visible == false then
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgPlayerList").Visible = true
+		plrListButtonSelected = true
+		plrListButton.Text = "->"
+	else
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgPlayerList").Visible = false
+		plrListButtonSelected = false
+		plrListButton.Text = "<-"
+	end
+end)
+
+plrListButton.MouseEnter:Connect(function()
+	tweenPlayPlrListButton:Play()
+end)
+
+plrListButton.MouseLeave:Connect(function()
+	if plrListButtonSelected == false then
+		tweenRevertPlrListButton:Play()
+	end
+end)
+
+local espTargetBoxFrame = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("targetBoxBg")
+local espTargetBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("targetBoxBg"):FindFirstChild("targetBox")
+local tweenPlayEspTargetBox = tweenService:Create(espTargetBoxFrame, tweenInfo, targetTransparency)
+local tweenRevertEspTargetBox = tweenService:Create(espTargetBoxFrame, tweenInfo, baseTransparency)
+local espTargetBoxTyping = false
+
+espTargetBox.Focused:Connect(function()
+	espTargetBoxTyping = true
+	tweenPlayEspTargetBox:Play()
+end)
+
+espTargetBox.FocusLost:Connect(function()
+	espTargetBoxTyping = false
+	tweenRevertEspTargetBox:Play()
+end)
+
+espTargetBoxFrame.MouseEnter:Connect(function()
+	if espTargetBoxTyping == false then
+		tweenPlayEspTargetBox:Play()
+	end
+end)
+
+espTargetBoxFrame.MouseLeave:Connect(function()
+	if espTargetBoxTyping == false then
+		tweenRevertEspTargetBox:Play()
+	end
+end)
+
+local targetColor = {BackgroundColor3 = Color3.fromRGB(150, 150, 150)}
+local baseColor = {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}
+local sliderEspNameHeight = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings"):FindFirstChild("nameHeightSlider"):FindFirstChild("nameHeightBg"):FindFirstChild("nameHeightSlot"):FindFirstChild("slider")
+local tweenPlaySliderEspNameHeight = tweenService:Create(sliderEspNameHeight, tweenInfo, targetColor)
+local tweenRevertSliderEspNameHeight = tweenService:Create(sliderEspNameHeight, tweenInfo, baseColor)
+
+sliderEspNameHeight.MouseEnter:Connect(function()
+	tweenPlaySliderEspNameHeight:Play()
+end)
+
+sliderEspNameHeight.MouseLeave:Connect(function()
+	tweenRevertSliderEspNameHeight:Play()
+end)
+
+local sliderEspNameSize = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBgAdvSettings"):FindFirstChild("nameSizeSlider"):FindFirstChild("nameSizeBg"):FindFirstChild("nameSizeSlot"):FindFirstChild("slider")
+local tweenPlaySliderEspNameSize = tweenService:Create(sliderEspNameSize, tweenInfo, targetColor)
+local tweenRevertSliderEspNameSize = tweenService:Create(sliderEspNameSize, tweenInfo, baseColor)
+
+sliderEspNameSize.MouseEnter:Connect(function()
+	tweenPlaySliderEspNameSize:Play()
+end)
+
+sliderEspNameSize.MouseLeave:Connect(function()
+	tweenRevertSliderEspNameSize:Play()
+end)
+
+local redColorBasic = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("redColorBasic"):FindFirstChild("redColorSelectionboxBasic")
+local tweenPlayRedColorBasic = tweenService:Create(redColorBasic, tweenInfo, targetTransparency)
+local tweenRevertRedColorBasic = tweenService:Create(redColorBasic, tweenInfo, baseTransparency)
+local redColorBasicTyping = false
+
+redColorBasic.Focused:Connect(function()
+	redColorBasicTyping = true
+	tweenPlayRedColorBasic:Play()
+end)
+
+redColorBasic.FocusLost:Connect(function()
+	redColorBasicTyping = false
+	tweenRevertRedColorBasic:Play()
+end)
+
+redColorBasic.MouseEnter:Connect(function()
+	if redColorBasicTyping == false then
+		tweenPlayRedColorBasic:Play()
+	end
+end)
+
+redColorBasic.MouseLeave:Connect(function()
+	if redColorBasicTyping == false then
+		tweenRevertRedColorBasic:Play()
+	end
+end)
+
+local greenColorBasic = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("greenColorBasic"):FindFirstChild("greenColorSelectionboxBasic")
+local tweenPlayGreenColorBasic = tweenService:Create(greenColorBasic, tweenInfo, targetTransparency)
+local tweenRevertGreenColorBasic = tweenService:Create(greenColorBasic, tweenInfo, baseTransparency)
+local greenColorBasicTyping = false
+
+greenColorBasic.Focused:Connect(function()
+	greenColorBasicTyping = true
+	tweenPlayGreenColorBasic:Play()
+end)
+
+greenColorBasic.FocusLost:Connect(function()
+	greenColorBasicTyping = false
+	tweenRevertGreenColorBasic:Play()
+end)
+
+greenColorBasic.MouseEnter:Connect(function()
+	if greenColorBasicTyping == false then
+		tweenPlayGreenColorBasic:Play()
+	end
+end)
+
+greenColorBasic.MouseLeave:Connect(function()
+	if greenColorBasicTyping == false then
+		tweenRevertGreenColorBasic:Play()
+	end
+end)
+
+local blueColorBasic = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("blueColorBasic"):FindFirstChild("blueColorSelectionboxBasic")
+local tweenPlayBlueColorBasic = tweenService:Create(blueColorBasic, tweenInfo, targetTransparency)
+local tweenRevertBlueColorBasic = tweenService:Create(blueColorBasic, tweenInfo, baseTransparency)
+local blueColorBasicTyping = false
+
+blueColorBasic.Focused:Connect(function()
+	blueColorBasicTyping = true
+	tweenPlayBlueColorBasic:Play()
+end)
+
+blueColorBasic.FocusLost:Connect(function()
+	blueColorBasicTyping = false
+	tweenRevertBlueColorBasic:Play()
+end)
+
+blueColorBasic.MouseEnter:Connect(function()
+	if blueColorBasicTyping == false then
+		tweenPlayBlueColorBasic:Play()
+	end
+end)
+
+blueColorBasic.MouseLeave:Connect(function()
+	if blueColorBasicTyping == false then
+		tweenRevertBlueColorBasic:Play()
+	end
+end)
+
+local freecamSpawnButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("mainHub"):FindFirstChild("gridLayout"):FindFirstChild("freecamSpawnButton")
+local tweenPlayFreecamSpawnButton = tweenService:Create(freecamSpawnButton, tweenInfo, targetTransparency)
+local tweenRevertFreecamSpawnButton = tweenService:Create(freecamSpawnButton, tweenInfo, baseTransparency)
+local freecamSpawnButtonSelected = false
+
+freecamSpawnButton.Activated:Connect(function()
+	if playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain").Visible == false then
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain").Visible = true
+		freecamSpawnButtonSelected = true
+	else
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain").Visible = false
+		freecamSpawnButtonSelected = false
+	end
+end)
+
+freecamSpawnButton.MouseEnter:Connect(function()
+	tweenPlayFreecamSpawnButton:Play()
+end)
+
+freecamSpawnButton.MouseLeave:Connect(function()
+	if freecamSpawnButtonSelected == false then
+		tweenRevertFreecamSpawnButton:Play()
+	end
+end)
+
+local freecamSpawnEnableButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton")
+local tweenPlayFreecamEnableButton = tweenService:Create(freecamSpawnEnableButton, tweenInfo, targetTransparency)
+local tweenRevertFreecamEnableButton = tweenService:Create(freecamSpawnEnableButton, tweenInfo, baseTransparency)
+
+freecamSpawnEnableButton.Activated:Connect(function()
+	if playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton").Text == "Disabled" then
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton").Text = "Enabled"
+		
+		if freecamSpawnEnableButton.on1:FindFirstChild("gradientRed") then
+			local gradientGreen = Instance.new("UIGradient")
+			gradientGreen.Parent = freecamSpawnEnableButton.on1
+			gradientGreen.Rotation = 90
+			gradientGreen.Name = "gradientGreen"
+			gradientGreen.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+			}
+			gradientGreen.Transparency = NumberSequence.new{
+				NumberSequenceKeypoint.new(0, 0, 0),
+				NumberSequenceKeypoint.new(1, 1, 0)
+			}
+			freecamSpawnEnableButton.on1:FindFirstChild("gradientRed"):Destroy()
+
+			local gradientGreen2 = Instance.new("UIGradient")
+			gradientGreen2.Parent = freecamSpawnEnableButton.on2
+			gradientGreen2.Rotation = 90
+			gradientGreen2.Name = "gradientGreen"
+			gradientGreen2.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+			}
+			gradientGreen2.Transparency = NumberSequence.new{
+				NumberSequenceKeypoint.new(0, 0, 0),
+				NumberSequenceKeypoint.new(1, 1, 0)
+			}
+			freecamSpawnEnableButton.on2:FindFirstChild("gradientRed"):Destroy()
+		end
+	else
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("freecamMain"):FindFirstChild("freecamBg"):FindFirstChild("freecamEnableButton").Text = "Disabled"
+		
+		if freecamSpawnEnableButton.on1:FindFirstChild("gradientGreen") then
+			local gradientRed = Instance.new("UIGradient")
+			gradientRed.Parent = freecamSpawnEnableButton.on1
+			gradientRed.Rotation = 90
+			gradientRed.Name = "gradientRed"
+			gradientRed.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+			}
+			gradientRed.Transparency = NumberSequence.new{
+				NumberSequenceKeypoint.new(0, 0, 0),
+				NumberSequenceKeypoint.new(1, 1, 0)
+			}
+			freecamSpawnEnableButton.on1:FindFirstChild("gradientGreen"):Destroy()
+
+			local gradientRed2 = Instance.new("UIGradient")
+			gradientRed2.Parent = freecamSpawnEnableButton.on2
+			gradientRed2.Rotation = 90
+			gradientRed2.Name = "gradientRed"
+			gradientRed2.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+			}
+			gradientRed2.Transparency = NumberSequence.new{
+				NumberSequenceKeypoint.new(0, 0, 0),
+				NumberSequenceKeypoint.new(1, 1, 0)
+			}
+			freecamSpawnEnableButton.on2:FindFirstChild("gradientGreen"):Destroy()
+		end
+	end
+end)
+
+freecamSpawnEnableButton.MouseEnter:Connect(function()
+	tweenPlayFreecamEnableButton:Play()
+end)
+
+freecamSpawnEnableButton.MouseLeave:Connect(function()
+	tweenRevertFreecamEnableButton:Play()
+end)
+
+local platformSpawnsButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("mainHub"):FindFirstChild("gridLayout"):FindFirstChild("platformSpawnsButton")
+local tweenPlayPlatformSpawnsButton = tweenService:Create(platformSpawnsButton, tweenInfo, targetTransparency)
+local tweenRevertPlatformSpawnsButton = tweenService:Create(platformSpawnsButton, tweenInfo, baseTransparency)
+local platformSpawnsButtonSelected = false
+
+platformSpawnsButton.Activated:Connect(function()
+	if playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain").Visible == false then
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain").Visible = true
+		platformSpawnsButtonSelected = true
+	else
+		playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain").Visible = false
+		platformSpawnsButtonSelected = false
+	end
+end)
+
+platformSpawnsButton.MouseEnter:Connect(function()
+	tweenPlayPlatformSpawnsButton:Play()
+end)
+
+platformSpawnsButton.MouseLeave:Connect(function()
+	if platformSpawnsButtonSelected == false then
+		tweenRevertPlatformSpawnsButton:Play()
+	end
+end)
+
+local bankPlatformButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout"):FindFirstChild("bankPlatformSpawnButton")
+local tweenPlayBankPlatformButton = tweenService:Create(bankPlatformButton, tweenInfo, targetTransparency)
+local tweenRevertBankPlatformButton = tweenService:Create(bankPlatformButton, tweenInfo, baseTransparency)
+
+bankPlatformButton.MouseEnter:Connect(function()
+	tweenPlayBankPlatformButton:Play()
+end)
+
+bankPlatformButton.MouseLeave:Connect(function()
+	tweenRevertBankPlatformButton:Play()
+end)
+
+local treasuryPlatformButton = playergui:FindFirstChild("griddleMenu"):FindFirstChild("platformSpawnsMain"):FindFirstChild("platformSpawnsBg"):FindFirstChild("platformSpawnsGridLayout"):FindFirstChild("treasuryPlatformSpawnButton")
+local tweenPlayTreasuryPlatformButton = tweenService:Create(treasuryPlatformButton, tweenInfo, targetTransparency)
+local tweenRevertTreasuryPlatformButt = tweenService:Create(treasuryPlatformButton, tweenInfo, baseTransparency)
+
+treasuryPlatformButton.MouseEnter:Connect(function()
+	tweenPlayTreasuryPlatformButton:Play()
+end)
+
+treasuryPlatformButton.MouseLeave:Connect(function()
+	tweenRevertTreasuryPlatformButt:Play()
+end)
