@@ -747,6 +747,19 @@ if not playergui:FindFirstChild("griddleMenu") then
 	commonUiStroke(toolEspButton)
 	commonUiCorner(toolEspButton)
 	
+	removeVWindowsButton = Instance.new("TextButton")
+	removeVWindowsButton.Parent = griddleMenu:FindFirstChild("miscOptionsMain"):FindFirstChild("miscOptionsBg"):FindFirstChild("miscOptionsScrollingFrame")
+	removeVWindowsButton.Name = "removeVehicleWindowsButton"
+	removeVWindowsButton.BackgroundTransparency = 1
+	removeVWindowsButton.Position = UDim2.new(0.079, 0, 0.852, 0)
+	removeVWindowsButton.Size = UDim2.new(0, 200, 0, 50)
+	removeVWindowsButton.FontFace = Font.fromEnum(Enum.Font.RobotoMono)
+	removeVWindowsButton.Text = "Remove Vehicle Windows"
+	removeVWindowsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	removeVWindowsButton.TextSize = 14
+	commonUiStroke(removeVWindowsButton)
+	commonUiCorner(removeVWindowsButton)
+	
 	settingsSpawnButton = Instance.new("TextButton")
 	settingsSpawnButton.Parent = griddleMenu:FindFirstChild("mainHub"):FindFirstChild("gridLayout")
 	settingsSpawnButton.Name = "settingsSpawnButton"
@@ -1598,6 +1611,7 @@ end)
 local targetBox = playergui:FindFirstChild("griddleMenu"):FindFirstChild("espMain"):FindFirstChild("espBg"):FindFirstChild("targetBoxBg"):FindFirstChild("targetBox")
 
 local selectedPlayers = {}
+local playerRegistry = {}
 local targetedParts = {}
 local namePartCreating = {}
 local buttonStates = {}
@@ -1608,11 +1622,19 @@ local respawnConnections = {}
 local pendingAllESP = {}
 local lastPosition = {}
 
+--//Dictionary tables used for storing ESP highlights/names for color changing
+local espHighlights = {}
+local itemEspHighlights = {}
+local espHighlightNames = {}
+
 local lastEspCount = 0
 local renderConnection = nil
 local nameFadeTime = 0.25
 local followSpeed = 18
+local playerEspCount = 0
+local itemEspCount = 0
 
+--//Functions
 local setButtonState
 local connectButton
 local espHandler
@@ -1818,6 +1840,29 @@ setSliderValueEspNameSize(midValueEspNameSize)
 --//esp menu ui settings
 local playerVehiclesFolder = game.Workspace:FindFirstChild("PlayerVehicles")
 local entitiesFolder = game.Workspace:FindFirstChild("Entities")
+local newColor
+
+local function updateHighlightColor()
+	for player, espHighlight in pairs(espHighlights) do
+		if espHighlight and espHighlight.Parent then
+			tweenService:Create(espHighlight, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FillColor = newColor}):Play()
+			tweenService:Create(espHighlight, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {OutlineColor = newColor}):Play()
+		end
+	end
+	
+	for player, espNameText in pairs(espHighlightNames) do
+		if espNameText and espNameText.Parent and espNameText.Parent.Parent then
+			tweenService:Create(espNameText, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = newColor}):Play()
+		end
+	end
+	
+	for obj, espHighlight in pairs(itemEspHighlights) do
+		if espHighlight and espHighlight.Parent then
+			tweenService:Create(espHighlight, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FillColor = newColor}):Play()
+			tweenService:Create(espHighlight, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {OutlineColor = newColor}):Play()
+		end
+	end
+end
 
 redColorTextBox.FocusLost:Connect(function(enterPressed)
 	local savedValue = redColorValue
@@ -1831,71 +1876,12 @@ redColorTextBox.FocusLost:Connect(function(enterPressed)
 			
 			print("Griddle Menu (ESP): Set red value of esp to " .. val)
 			redColorValue = val
-			colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			newColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			tweenService:Create(colorSelectorBasic, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = newColor}):Play()
 			redColorTextBox.Text = val
 			savedValue = redColorValue
 			
-			for player in pairs(selectedPlayers) do
-				local character = player.Character
-				if not character then
-					continue
-				end
-
-				local espHighlight = character:FindFirstChild("espHighlight")
-
-				if espHighlight then
-					espHighlight.FillColor =Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				end
-
-				local folder = workspace:FindFirstChild("highlightNameParts")
-				if folder then
-					local part = folder:FindFirstChild(player.Name)
-
-					if part then
-						local text =
-							part:FindFirstChild("espName")
-							and part.espName:FindFirstChild("espNameText")
-
-						if text then
-							text.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						end
-					end
-				end
-			end
-			
-			for _, obj in pairs(playerVehiclesFolder:GetChildren()) do
-				if obj.Name == "Money Truck" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					if espHighlight then
-						espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					end
-				end
-			end
-
-			for _, obj in pairs(entitiesFolder:GetChildren()) do
-				if obj.Name == "Simple Printer" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				elseif obj.Name == "Hotwired Printer" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				elseif obj.Name == "ToolModel" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					if espHighlight then
-						espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					end
-				end
-			end
+			updateHighlightColor()
 		else
 			print("Griddle Menu (ESP): Input invalid, input can only be numbers 0-255")
 			redColorTextBox.Text = savedValue
@@ -1916,71 +1902,12 @@ greenColorTextBox.FocusLost:Connect(function(enterPressed)
 
 			print("Griddle Menu (ESP): Set green value of esp to " .. val)
 			greenColorValue = val
-			colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			newColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			tweenService:Create(colorSelectorBasic, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = newColor}):Play()
 			greenColorTextBox.Text = val
 			savedValue = greenColorValue
-
-			for player in pairs(selectedPlayers) do
-				local character = player.Character
-				if not character then
-					continue
-				end
-
-				local espHighlight = character:FindFirstChild("espHighlight")
-
-				if espHighlight then
-					espHighlight.FillColor =Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				end
-
-				local folder = workspace:FindFirstChild("highlightNameParts")
-				if folder then
-					local part = folder:FindFirstChild(player.Name)
-
-					if part then
-						local text =
-							part:FindFirstChild("espName")
-							and part.espName:FindFirstChild("espNameText")
-
-						if text then
-							text.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						end
-					end
-				end
-			end
 			
-			for _, obj in pairs(playerVehiclesFolder:GetChildren()) do
-				if obj.Name == "Money Truck" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					if espHighlight then
-						espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					end
-				end
-			end
-
-			for _, obj in pairs(entitiesFolder:GetChildren()) do
-				if obj.Name == "Simple Printer" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				elseif obj.Name == "Hotwired Printer" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				elseif obj.Name == "ToolModel" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					if espHighlight then
-						espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					end
-				end
-			end
+			updateHighlightColor()
 		else
 			print("Griddle Menu (ESP): Input invalid, input can only be numbers 0-255")
 			greenColorTextBox.Text = savedValue
@@ -2001,71 +1928,12 @@ blueColorTextBox.FocusLost:Connect(function(enterPressed)
 
 			print("Griddle Menu (ESP): Set blue value of esp to " .. val)
 			blueColorValue = val
-			colorSelectorBasic.BackgroundColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			newColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+			tweenService:Create(colorSelectorBasic, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = newColor}):Play()
 			blueColorTextBox.Text = val
 			savedValue = blueColorValue
-
-			for player in pairs(selectedPlayers) do
-				local character = player.Character
-				if not character then
-					continue
-				end
-
-				local espHighlight = character:FindFirstChild("espHighlight")
-
-				if espHighlight then
-					espHighlight.FillColor =Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				end
-
-				local folder = workspace:FindFirstChild("highlightNameParts")
-				if folder then
-					local part = folder:FindFirstChild(player.Name)
-
-					if part then
-						local text =
-							part:FindFirstChild("espName")
-							and part.espName:FindFirstChild("espNameText")
-
-						if text then
-							text.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						end
-					end
-				end
-			end
 			
-			for _, obj in pairs(playerVehiclesFolder:GetChildren()) do
-				if obj.Name == "Money Truck" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-					
-					if espHighlight then
-						espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					end
-				end
-			end
-			
-			for _, obj in pairs(entitiesFolder:GetChildren()) do
-				if obj.Name == "Simple Printer" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				elseif obj.Name == "Hotwired Printer" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-				elseif obj.Name == "ToolModel" then
-					local espHighlight = obj:FindFirstChild("espHighlight")
-
-					if espHighlight then
-						espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-						espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
-					end
-				end
-			end
+			updateHighlightColor()
 		else
 			print("Griddle Menu (ESP): Input invalid, input can only be numbers 0-255")
 			blueColorTextBox.Text = savedValue
@@ -2091,9 +1959,11 @@ local function createHighlight(player, character)
 	espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
 	espHighlight:SetAttribute("ESPPlayer", player.UserId)
 	
-	tweenService:Create(
-		espHighlight,
-		TweenInfo.new(nameFadeTime), {FillTransparency = 0.7, OutlineTransparency = 0}):Play()
+	tweenService:Create(espHighlight, TweenInfo.new(nameFadeTime), {FillTransparency = 0.7, OutlineTransparency = 0}):Play()
+	
+	espHighlights[player] = espHighlight
+	
+	playerEspCount = playerEspCount + 1
 	
 	return espHighlight
 end
@@ -2177,16 +2047,18 @@ function removeHighlightNamePart(player)
 	else
 		part:Destroy()
 	end
+	
+	espHighlightNames[player] = nil
 
 	updateESPUpdaterState()
 end
 
-local function createHighLightNamePart(targetedPlayer)
-	if namePartCreating[targetedPlayer] then
+local function createHighLightNamePart(player)
+	if namePartCreating[player] then
 		return
 	end
 
-	local existing = targetedParts[targetedPlayer]
+	local existing = targetedParts[player]
 
 	if existing and existing.part then
 		if existing.part:GetAttribute("Removing") then
@@ -2196,19 +2068,19 @@ local function createHighLightNamePart(targetedPlayer)
 		return
 	end
 
-	namePartCreating[targetedPlayer] = true
+	namePartCreating[player] = true
 	
-	local character = targetedPlayer.Character
+	local character = player.Character
 	
 	if not character then
-		namePartCreating[targetedPlayer] = nil
+		namePartCreating[player] = nil
 		return
 	end
 
 	local head = character:WaitForChild("Head", 3)
 
 	if not head then
-		namePartCreating[targetedPlayer] = nil
+		namePartCreating[player] = nil
 		return
 	end
 
@@ -2217,7 +2089,7 @@ local function createHighLightNamePart(targetedPlayer)
 	part.Anchored = true
 	part.CanCollide = false
 	part.Parent = game.Workspace:FindFirstChild("highlightNameParts")
-	part.Name = targetedPlayer.Name
+	part.Name = player.Name
 	part.Transparency = 1
 	part:SetAttribute("Removing", false)
 	
@@ -2236,16 +2108,16 @@ local function createHighLightNamePart(targetedPlayer)
 	espNameText.Size = UDim2.new(0, 100 + espNameSizeValue, 0 , 25 + (espNameSizeValue / 4))
 	espNameText.ClipsDescendants = false
 	espNameText.FontFace = Font.fromName("RobotoMono")
-	espNameText.Text = targetedPlayer.Name
+	espNameText.Text = player.Name
 	espNameText.TextColor3 = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
 	espNameText.TextScaled = true
 	espNameText.TextTransparency = 1
 	
-	local tween = tweenService:Create(espNameText, TweenInfo.new(nameFadeTime), {TextTransparency = 0})
+	espHighlightNames[player] = espNameText
+	
+	tweenService:Create(espNameText, TweenInfo.new(nameFadeTime), {TextTransparency = 0}):Play()
 
-	tween:Play()
-
-	targetedParts[targetedPlayer] = {
+	targetedParts[player] = {
 		part = part,
 		character = character
 	}
@@ -2256,7 +2128,7 @@ local function createHighLightNamePart(targetedPlayer)
 		part.CFrame = head.CFrame * CFrame.new(0, espNamePartHeightVal, 0)
 	end
 	
-	namePartCreating[targetedPlayer] = nil
+	namePartCreating[player] = nil
 	
 	updateESPUpdaterState()
 end
@@ -2486,9 +2358,11 @@ local function syncESP(player)
 			data.highlight = nil
 
 			if highlight then
-				local tween = tweenService:Create(
-					highlight,
-					TweenInfo.new(nameFadeTime), {FillTransparency = 1, OutlineTransparency = 1})
+				espHighlights[player] = nil
+				
+				playerEspCount = playerEspCount - 1
+				
+				local tween = tweenService:Create(highlight, TweenInfo.new(nameFadeTime), {FillTransparency = 1, OutlineTransparency = 1})
 
 				tween:Play()
 
@@ -2818,6 +2692,7 @@ players.PlayerRemoving:Connect(function(player)
 	removeHighlightNamePart(player)
 
 	local data = espRegistry[player]
+	
 	if data and data.highlight then
 		data.highlight:Destroy()
 	end
@@ -2838,6 +2713,13 @@ players.PlayerRemoving:Connect(function(player)
 		connectedButtons[button] = nil
 		removeNameFromGui(player)
 	end
+	
+	local highlight = espHighlights[player]
+	
+	if highlight then
+		highlight:Destroy()
+		espHighlights[player] = nil
+	end
 
 	updateNameState()
 	
@@ -2846,14 +2728,18 @@ end)
 
 --//Remove the esp name part and re-add it back after the player dies
 local function waitForCharacterReady(character)
-	if not character then return false end
+	if not character then
+		return false
+	end
 
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	
 	if not humanoid then
 		humanoid = character:WaitForChild("Humanoid", 3)
 	end
 
 	local head = character:FindFirstChild("Head")
+	
 	if not head then
 		head = character:WaitForChild("Head", 3)
 	end
@@ -2929,9 +2815,11 @@ local autoBToolsOn = false
 local printerEsp = false
 local moneyTruckEsp = false
 local toolEsp = false
+local removeVWindows = false
 
 --//Give BTools
-giveBToolsButton.Activated:Connect(function()
+
+local function giveBToolsFunc()
 	local hammerCheck = playerLocal:FindFirstChild("Backpack"):FindFirstChild("Hammer")
 	local cloneCheck = playerLocal:FindFirstChild("Backpack"):FindFirstChild("Clone")
 	local grabCheck = playerLocal:FindFirstChild("Backpack"):FindFirstChild("Grab")
@@ -2956,6 +2844,10 @@ giveBToolsButton.Activated:Connect(function()
 		grabTool.BinType = 2
 		grabTool.Parent = backpack
 	end
+end
+
+giveBToolsButton.Activated:Connect(function()
+	giveBToolsFunc()
 end)
 
 --//Auto BTools
@@ -2965,42 +2857,57 @@ autoBToolsButton.Activated:Connect(function()
 	else
 		autoBToolsOn = false
 	end
+	
+	giveBToolsFunc()
 end)
 
 playerLocal.CharacterAdded:Connect(function(character)
 	if autoBToolsOn == true then
-		local backpack = game:GetService("Players").LocalPlayer.Backpack
-
-		local filler = Instance.new("Tool")
-		filler.Name = "filler"
-		filler.Parent = backpack
-
-		local hammer = Instance.new("HopperBin")
-		hammer.Name = "Hammer"
-		hammer.BinType = 4
-		hammer.Parent = backpack
-
-		local cloneTool = Instance.new("HopperBin")
-		cloneTool.Name = "Clone"
-		cloneTool.BinType = 3
-		cloneTool.Parent = backpack
-
-		local grabTool = Instance.new("HopperBin")
-		grabTool.Name = "Grab"
-		grabTool.BinType = 2
-		grabTool.Parent = backpack
-
-		filler:Destroy()
+		giveBToolsFunc()
 	end
 end)
 
 local function createObjHighlight(obj)
+	if itemEspHighlights[obj] then
+		return
+	end
+	
 	local espHighlight = Instance.new("Highlight")
 	espHighlight.Name = "espHighlight"
 	espHighlight.Parent = obj
-	espHighlight.FillTransparency = 0.7
+	espHighlight.FillTransparency = 1
+	espHighlight.OutlineTransparency = 1
 	espHighlight.FillColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
 	espHighlight.OutlineColor = Color3.fromRGB(redColorValue, greenColorValue, blueColorValue)
+	
+	itemEspHighlights[obj] = espHighlight
+	
+	tweenService:Create(espHighlight, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FillTransparency = 0.7, OutlineTransparency = 0}):Play()
+end
+
+local function removeObjHighlightFromTable(obj)
+	if itemEspHighlights[obj] then
+		itemEspHighlights[obj]:Destroy()
+		itemEspHighlights[obj] = nil
+	end
+end
+
+local function removeObjHighlight(obj)
+	local highlight = itemEspHighlights[obj]
+
+	if not highlight then
+		return
+	end
+
+	local tween = tweenService:Create(highlight, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FillTransparency = 1, OutlineTransparency = 1})
+
+	tween:Play()
+
+	tween.Completed:Connect(function()
+		if itemEspHighlights[obj] then
+			removeObjHighlightFromTable(obj)
+		end
+	end)
 end
 
 --//Printer ESP
@@ -3020,44 +2927,36 @@ printerEspButton.Activated:Connect(function()
 		
 		for _, obj in pairs(entitiesFolder:GetChildren()) do
 			if obj.Name == "Simple Printer" then
-				if obj:FindFirstChild("espHighlight") then
-					obj:FindFirstChild("espHighlight"):Destroy()
-				end
+				removeObjHighlight(obj)
 			elseif obj.Name == "Hotwired Printer" then
-				if obj:FindFirstChild("espHighlight") then
-					obj:FindFirstChild("espHighlight"):Destroy()
-				end
+				removeObjHighlight(obj)
 			end
 		end
 	end
 end)
 
 entitiesFolder.ChildAdded:Connect(function(child)
-	if printerEsp == true then
-		if child.Name == "Simple Printer" then
+	if child.Name == "Simple Printer" then
+		if printerEsp == true then
 			createObjHighlight(child)
-		elseif child.Name == "Hotwired Printer" then
+		end
+	elseif child.Name == "Hotwired Printer" then
+		if printerEsp == true then
 			createObjHighlight(child)
 		end
 	end
 end)
 
 --//Tool/Gun ESP
-local fakeGunDBlockMade = false
-
 toolEspButton.Activated:Connect(function()
-	
-	if fakeGunDBlockMade == false then
-		local fakeGunDBlock = Instance.new("Part")
-		fakeGunDBlock.Parent = game.Workspace
-		fakeGunDBlock.Name = "FakeGunDBlock"
-		fakeGunDBlock.Anchored = true
-		fakeGunDBlock.CanCollide = false
-		fakeGunDBlock.Transparency = 1
-		fakeGunDBlock.Size = Vector3.new(17.4, 1.8, 14)
-		fakeGunDBlock.Position = Vector3.new(995.15, -39.285, -151.35)
-		fakeGunDBlockMade = true
-	end
+	local fakeGunDBlock = Instance.new("Part")
+	fakeGunDBlock.Parent = game.Workspace
+	fakeGunDBlock.Name = "FakeGunDBlock"
+	fakeGunDBlock.Anchored = true
+	fakeGunDBlock.CanCollide = false
+	fakeGunDBlock.Transparency = 1
+	fakeGunDBlock.Size = Vector3.new(17.4, 1.8, 14)
+	fakeGunDBlock.Position = Vector3.new(995.15, -39.285, -151.35)
 	
 	if toolEsp == false then
 		toolEsp = true
@@ -3088,22 +2987,26 @@ toolEspButton.Activated:Connect(function()
 		
 		for _, obj in pairs(entitiesFolder:GetChildren()) do
 			if obj.Name == "ToolModel" then
-				local highlight = obj:FindFirstChild("espHighlight")
-				
-				if highlight then
-					highlight:Destroy()
-				end
+				removeObjHighlight(obj)
 			end
 		end
 	end
+	
+	fakeGunDBlock:Destroy()
 end)
 
 entitiesFolder.ChildAdded:Connect(function(child)
-	if toolEsp == true then
-		if child.Name == "ToolModel" then
-			createHighlight(child)
-		end
+	if child.Name == "ToolModel" and toolEsp == true then
+		task.defer(function()
+			if child.Parent then
+				createObjHighlight(child)
+			end
+		end)
 	end
+end)
+
+entitiesFolder.ChildRemoved:Connect(function(child)
+	removeObjHighlightFromTable(child)
 end)
 
 --//Money truck ESP
@@ -3121,18 +3024,83 @@ moneyTruckEspButton.Activated:Connect(function()
 		
 		for _, obj in pairs(playerVehiclesFolder:GetChildren()) do
 			if obj.Name == "Money Truck" then
-				obj:FindFirstChild("espHighlight"):Destroy()
+				removeObjHighlight(obj)
 			end
 		end
 	end
 end)
 
 playerVehiclesFolder.ChildAdded:Connect(function(child)
-	if moneyTruckEsp == true then
-		if child.Name == "Money Truck" then
-			createObjHighlight(child)
-		end
+	if child.Name == "Money Truck" and moneyTruckEsp == true then
+		task.defer(function()
+			if child.Parent then
+				createObjHighlight(child)
+			end
+		end)
 	end
+end)
+
+playerVehiclesFolder.ChildRemoved:Connect(function(child)
+	removeObjHighlightFromTable(child)
+end)
+
+--//Remove Vehicle windows button
+removeVWindowsButton.Activated:Connect(function()
+	if removeVWindows == false then
+		removeVWindows = true
+		
+		for _, obj in pairs(playerVehiclesFolder:GetChildren()) do
+			if obj.Name == "Humvee" then
+				for _, part in ipairs(obj:GetDescendants()) do
+					if part:IsA("BasePart") and part.Color == Color3.fromRGB(99,95,98) and math.abs(part.Transparency - 0.4) < 0.01 then
+						part:Destroy()
+					end
+				end
+			else
+				for _, part in ipairs(obj:GetDescendants()) do
+					if part.Name == "Window" then
+						part:Destroy()
+					end
+				end
+			end
+		end
+	else
+		removeVWindows = false
+	end
+end)
+
+playerVehiclesFolder.ChildAdded:Connect(function(child)
+	task.delay(0.1, function()
+		if not child or not child.Parent then
+			return
+		end
+		
+		if not removeVWindows then
+			return
+		end
+
+		local function checkPart(part)
+			if child.Name == "Humvee" then
+				if part:IsA("BasePart") and part.Color == Color3.fromRGB(99,95,98) and math.abs(part.Transparency - 0.4) < 0.01 then
+					part:Destroy()
+				end
+			else
+				if part.Name == "Window" then
+					part:Destroy()
+				end
+			end
+		end
+
+		for _, part in ipairs(child:GetDescendants()) do
+			checkPart(part)
+		end
+
+		child.DescendantAdded:Connect(function(part)
+			if removeVWindows then
+				checkPart(part)
+			end
+		end)
+	end)
 end)
 
 --[[
@@ -3632,6 +3600,28 @@ end)
 toolEspButton.MouseLeave:Connect(function()
 	if toolEspButtonSelected == false then
 		tweenRevertToolEspButton:Play()
+	end
+end)
+
+tweenPlayRemoveVWindowsButton = tweenService:Create(removeVWindowsButton, tweenInfo, targetTransparency)
+tweenRevertRemoveVWindowsButton = tweenService:Create(removeVWindowsButton, tweenInfo, baseTransparency)
+removeVWindowsButtonSelected = false
+
+removeVWindowsButton.Activated:Connect(function()
+	if removeVWindowsButtonSelected == false then
+		removeVWindowsButtonSelected = true
+	else
+		removeVWindowsButtonSelected = false
+	end
+end)
+
+removeVWindowsButton.MouseEnter:Connect(function()
+	tweenPlayRemoveVWindowsButton:Play()
+end)
+
+removeVWindowsButton.MouseLeave:Connect(function()
+	if removeVWindowsButtonSelected == false then
+		tweenRevertRemoveVWindowsButton:Play()
 	end
 end)
 
